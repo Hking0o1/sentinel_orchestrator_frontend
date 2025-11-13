@@ -1,0 +1,11 @@
+@import "tailwindcss";
+
+:root {
+    --primary-dark : '#000';
+    --primary-light : '#172a45'; 
+    --accent-blue : '#3b82f6'; 
+    --accent-gold: '#ffb700';  
+    --text-silver: 'black';   
+    --text-light: 'black';  
+    --border-grey: '#2d3e5a';
+}
