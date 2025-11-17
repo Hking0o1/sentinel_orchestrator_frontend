@@ -49,12 +49,12 @@ const StatCard = ({
 }) => {
   const Icon = icon;
   return (
-    <Card className="bg-primary-light border-neutral-700 text-neutral-800">
+    <Card className="bg-primary-light border-neutral-200 text-neutral-300">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-neutral-700">
+        <CardTitle className="text-sm font-medium text-neutral-300">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-neutral-800" />
+        <Icon className="h-4 w-4 text-neutral-300" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -91,7 +91,7 @@ const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
     },
     INFO: {
       icon: FileText,
-      color: 'bg-neutral-600 text-neutral-500',
+      color: 'bg-neutral-600 text-neutral-200',
       text: 'Info',
     },
   };
@@ -215,21 +215,21 @@ export const DashboardPage = () => {
 
     // 4. Render the data table if successful
     return (
-      <Card className="bg-primary-light border-neutral-700 text-neutral-700">
+      <Card className="bg-primary-light border-neutral-400 text-neutral-200">
         <CardHeader>
           <CardTitle>Recent Scans</CardTitle>
-          <CardDescription className="text-neutral-900">
+          <CardDescription className="text-neutral-100">
             A list of your 5 most recent security scans.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-neutral-700 hover:bg-primary-dark">
-                <TableHead className="text-neutral-600">Target</TableHead>
-                <TableHead className="text-neutral-600">Severity</TableHead>
-                <TableHead className="text-neutral-600">Status</TableHead>
-                <TableHead className="text-neutral-600">Date</TableHead>
+              <TableRow className="border-neutral-400 hover:bg-primary-dark">
+                <TableHead className="text-neutral-200">Target</TableHead>
+                <TableHead className="text-neutral-200">Severity</TableHead>
+                <TableHead className="text-neutral-200">Status</TableHead>
+                <TableHead className="text-neutral-200">Date</TableHead>
                 <TableHead className="text-right text-neutral-600">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -237,7 +237,7 @@ export const DashboardPage = () => {
               {scanHistory.slice(0, 5).map((scan) => (
                 <TableRow
                   key={scan.id}
-                  className="border-neutral-700 hover:bg-primary-dark"
+                  className="border-neutral-400 hover:bg-primary-dark"
                 >
                   {/* --- FIX #1: Changed 'scan.targetUrl' to 'scan.target' --- */}
                   <TableCell className="font-medium">{scan.target}</TableCell>
@@ -276,10 +276,10 @@ export const DashboardPage = () => {
     <div className="flex flex-col gap-8">
       {/* --- 1. Page Header --- */}
       <div>
-        <h1 className="text-3xl font-bold text-neutral-700">
-          Welcome back, {user?.full_name || 'User'}!
+        <h1 className="text-3xl font-bold text-neutral-300">
+          Welcome back, {user?.name || 'User'}!
         </h1>
-        <p className="text-lg text-neutral-800">
+        <p className="text-lg text-neutral-200">
           Here's a high-level overview of your security posture.
         </p>
       </div>
@@ -313,10 +313,10 @@ export const DashboardPage = () => {
       </div>
 
       {/* --- 3. Risk Score Progress --- */}
-      <Card className="bg-primary-light border-neutral-700 text-neutral-700">
+      <Card className="bg-primary-light border-neutral-200 text-neutral-300">
         <CardHeader>
           <CardTitle>Security Posture</CardTitle>
-          <CardDescription className="text-neutral-400">
+          <CardDescription className="text-neutral-300">
             This score represents your overall application security. 100 is
             perfect.
           </CardDescription>

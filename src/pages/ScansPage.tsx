@@ -96,13 +96,10 @@ const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
 };
 
 const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
-  // FIX 1: Changed config to Record<string, string> to satisfy index signature
-  // and added 'STARTED' based on the implicit error message.
   const config: Record<string, string> = {
-    COMPLETED: 'text-green-400',
-    RUNNING: 'text-accent-blue',
-    STARTED: 'text-accent-blue', // Added missing status
     PENDING: 'text-neutral-400',
+    RUNNING: 'text-accent-blue',
+    COMPLETED: 'text-green-400',
     FAILED: 'text-red-500',
   };
   const statusClass = config[status] || 'text-neutral-500'; // Fallback
@@ -122,9 +119,7 @@ const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
 // 1. Define the validation schema for the new scan form
 const scanFormSchema = z.object({
   // FIX 2: Updated Zod enum syntax for custom error messages
-  profile: z.enum(['developer', 'web', 'full'], {
-    errorMap: () => ({ message: 'A scan profile is required.' }),
-  }),
+  profile: z.enum(['developer', 'web', 'full']).describe('A scan profile is required.'),
   targetUrl: z.string().optional(),
   sourceCodePath: z.string().optional(),
 }).refine(
@@ -191,8 +186,9 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
         setOpen(false); // Close the dialog
         form.reset();
       },
-      onError: (error: any) => {
-        setApiError(error.message || 'An unknown error occurred.');
+      onError: (error: unknown) => {
+        const message = error instanceof Error ? error.message : 'An unknown error occurred.';
+        setApiError(message);
       },
     });
   };
@@ -201,7 +197,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
     <DialogContent className="bg-primary-light border-neutral-700 text-neutral-100 sm:max-w-md">
       <DialogHeader>
         <DialogTitle className="text-accent-gold">Start a New Scan</DialogTitle>
-        <DialogDescription className="text-neutral-400">
+        <DialogDescription className="text-neutral-200">
           Configure and launch a new security scan job.
         </DialogDescription>
       </DialogHeader>
@@ -374,13 +370,11 @@ export const ScansPage = () => {
         <TableBody>
           {scanHistory.map((scan) => (
             <TableRow
-              key={scan.job_id}
+              key={scan.id}
               className="border-neutral-700 hover:bg-primary-dark"
             >
-              {/* FIX 4: Use '(scan as any)' to bypass type errors for properties
-                  that exist in the data but may be missing from the ScanJob type. */}
               <TableCell className="font-medium">
-                {(scan as any).targetUrl || (scan as any).sourceCodePath || 'N/A'}
+                {scan.target || 'N/A'}
               </TableCell>
               <TableCell className="capitalize">{scan.profile}</TableCell>
               <TableCell>
@@ -390,15 +384,15 @@ export const ScansPage = () => {
                 <StatusBadge status={scan.status} />
               </TableCell>
               <TableCell>
-                {(scan as any).createdAt
-                  ? format(new Date((scan as any).createdAt), 'dd MMM yyyy, h:mm a')
+                {scan.createdAt
+                  ? format(new Date(scan.createdAt), 'dd MMM yyyy, h:mm a')
                   : 'N/A'}
               </TableCell>
               <TableCell className="text-right">
                 <Button
                   variant="link"
                   className="text-accent-gold hover:text-accent-gold/80"
-                  onClick={() => navigate(`/scan/${scan.job_id}`)}
+                  onClick={() => navigate(`/scans/${scan.id}`)}
                 >
                   View Report
                 </Button>

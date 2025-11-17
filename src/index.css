@@ -1,11 +1,16 @@
 @import "tailwindcss";
 
 :root {
-    --primary-dark : '#000';
-    --primary-light : '#172a45'; 
-    --accent-blue : '#3b82f6'; 
-    --accent-gold: '#ffb700';  
-    --text-silver: 'black';   
-    --text-light: 'black';  
-    --border-grey: '#2d3e5a';
+    --primary-dark: #0a192f;
+    --primary-light: #172a45; 
+    --accent-blue: #3b82f6; 
+    --accent-gold: #ffb700;  
+    --text-silver: #c4c8d4;   
+    --text-light: #ffffff;  
+    --border-grey: #2d3e5a;
+}
+
+body {
+  background-color: var(--primary-dark);
+  color: var(--text-light);
 }

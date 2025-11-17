@@ -11,14 +11,6 @@ import SettingsPage from './pages/SettingsPage';
 // Create a client for TanStack Query
 const queryClient = new QueryClient();
 
-/**
- * App Component
- *
- * This is the root component of the application. It's responsible for:
- * 1. Setting up the QueryClientProvider for server state management.
- * 2. Setting up the AuthProvider for global authentication state.
- * 3. Defining the application's routes using React Router.
- */
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
