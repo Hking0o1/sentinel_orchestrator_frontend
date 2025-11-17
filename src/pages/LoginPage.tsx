@@ -1,12 +1,12 @@
-import React from 'react';
+import {useRef, useState} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import * as authService from '@/services/authService';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
+import { gsap } from 'gsap';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -27,11 +27,11 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 
 // 1. Define the validation schema with Zod
 const formSchema = z.object({
-  username: z.string().email({ message: 'Please enter a valid email address.' }),
+  email: z.string().email({ message: 'Please enter a valid email address.' }),
   password: z
     .string()
     .min(1, { message: 'Password is required.' }),
@@ -48,14 +48,14 @@ type LoginFormValues = z.infer<typeof formSchema>;
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const cardRef = React.useRef(null);
-  const [apiError, setApiError] = React.useState<string | null>(null);
+  const cardRef = useRef(null);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // 3. Set up react-hook-form
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
@@ -79,12 +79,19 @@ export const LoginPage = () => {
   const onSubmit = async (values: LoginFormValues) => {
     setApiError(null);
     try {
+      // --- THIS IS THE REAL API CALL ---
       const { user, access_token } = await authService.login({
-        username: values.username,
-        password: values.password,
+        username: values.email,
+        password: values.password
       });
+      // ---------------------------------
+
+      // Use the login function from our AuthContext
       login(user, access_token);
+      
+      // Redirect to the dashboard
       navigate('/');
+
     } catch (error: any) {
       setApiError(error.message || 'An unknown error occurred.');
     }
@@ -94,14 +101,17 @@ export const LoginPage = () => {
     <div className="flex items-center justify-center min-h-screen bg-primary-dark p-4">
       <Card
         ref={cardRef}
-        className="w-full max-w-md bg-primary-light border-neutral-700 text-neutral-100 shadow-2xl shadow-accent-gold/10"
+        className="w-full max-w-md bg-primary-light border-border text-foreground shadow-2xl shadow-accent-gold/10"
       >
-        <CardHeader className="text-center">
-          <CardTitle className="text-3xl font-bold text-accent-gold">
-            Sentinel
+        <CardHeader className="text-center items-center">
+          <div className="p-3 bg-primary-dark rounded-full mb-4 border border-border">
+            <ShieldCheck className="h-10 w-10 text-primary" />
+          </div>
+          <CardTitle className="text-3xl font-bold text-primary">
+            Project Sentinel
           </CardTitle>
-          <CardDescription className="text-neutral-400 pt-2">
-            Welcome back. Please log in to access the dashboard.
+          <CardDescription className="text-muted-foreground pt-2">
+            Please log in to access the security dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,7 +119,7 @@ export const LoginPage = () => {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               {/* API Error Message */}
               {apiError && (
-                <Alert variant="destructive" className="bg-red-900/50 border-red-700">
+                <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Login Failed</AlertTitle>
                   <AlertDescription>{apiError}</AlertDescription>
@@ -119,16 +129,16 @@ export const LoginPage = () => {
               {/* Email Field */}
               <FormField
                 control={form.control}
-                name="username"
+                name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Email</FormLabel>
+                    <FormLabel className="text-muted-foreground">Email</FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="admin@example.com"
                         {...field}
-                        className="bg-primary-dark border-neutral-600 focus:border-accent-gold"
+                        className="bg-primary-dark border-border focus:ring-ring"
                       />
                     </FormControl>
                     <FormMessage />
@@ -142,13 +152,13 @@ export const LoginPage = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Password</FormLabel>
+                    <FormLabel className="text-muted-foreground">Password</FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder="••••••••"
                         {...field}
-                        className="bg-primary-dark border-neutral-600 focus:border-accent-gold"
+                        className="bg-primary-dark border-border focus:ring-ring"
                       />
                     </FormControl>
                     <FormMessage />
@@ -158,20 +168,20 @@ export const LoginPage = () => {
 
               <Button
                 type="submit"
-                className="w-full bg-accent-gold text-primary-dark font-bold hover:bg-accent-gold/90"
+                className="w-full bg-primary text-primary-foreground font-bold hover:bg-primary/90"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                  'Sign In'
+                  'Log In'
                 )}
               </Button>
             </form>
           </Form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button variant="link" className="text-neutral-400 hover:text-accent-gold">
+          <Button variant="link" className="text-muted-foreground hover:text-primary">
             Forgot password?
           </Button>
         </CardFooter>
@@ -181,4 +191,3 @@ export const LoginPage = () => {
 };
 
 export default LoginPage;
-
