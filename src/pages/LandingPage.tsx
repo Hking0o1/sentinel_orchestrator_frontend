@@ -1,15 +1,13 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom"; // 1. Import navigation hook
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Terminal, ShieldCheck, Zap, Database, Lock, Activity } from "lucide-react";
 
 /**
  * LandingPage.tsx
  * Modern cybersecurity landing page — interactive & accessible
- *
- * Requires: framer-motion, lucide-react (icons)
- * Tailwind-friendly classes are used; fallback CSS provided below for colors.
  */
 
 /* -------------------------
@@ -26,19 +24,16 @@ const rootStyles = `
   --border-grey: #2d3e5a;
 }
 
-/* optional helpers when Tailwind isn't present */
 body { background: var(--primary-dark); color: var(--text-light); font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
 
 .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
 
-/* subtle glass */
 .glass {
   background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   border: 1px solid rgba(255,255,255,0.03);
   backdrop-filter: blur(6px);
 }
 
-/* animated glowing border button */
 .glow-btn {
   position: relative;
   overflow: hidden;
@@ -48,6 +43,8 @@ body { background: var(--primary-dark); color: var(--text-light); font-family: I
   background: linear-gradient(180deg, var(--primary-light), var(--primary-dark));
   color: var(--text-light);
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
 }
 .glow-btn::before {
   content: "";
@@ -61,9 +58,9 @@ body { background: var(--primary-dark); color: var(--text-light); font-family: I
   z-index: 0;
 }
 .glow-btn:hover::before, .glow-btn:focus::before { transform: translateX(0%); }
+.glow-btn:active { transform: scale(0.98); }
 .glow-btn > * { position: relative; z-index: 2; }
 
-/* spotlight layer */
 .spotlight {
   position: fixed;
   pointer-events: none;
@@ -75,7 +72,6 @@ body { background: var(--primary-dark); color: var(--text-light); font-family: I
   z-index: 5;
 }
 
-/* feature card tilt transform origin */
 .feature-card { transform-style: preserve-3d; will-change: transform; }
 `;
 
@@ -84,14 +80,14 @@ body { background: var(--primary-dark); color: var(--text-light); font-family: I
    ------------------------- */
 
 const Badge: React.FC<{ children?: React.ReactNode }> = ({ children }) => (
-  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium" style={{ background: "rgba(59,130,246,0.08)", color: "var(--accent-blue)" }}>
+  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium" style={{ background: "rgba(59,130,246,0.08)", color: "var(--accent-blue)", border: "1px solid rgba(59,130,246,0.2)" }}>
     {children}
   </div>
 );
 
 const FeatureCard: React.FC<{ title: string; desc: string; Icon: React.ComponentType<any> }> = ({ title, desc, Icon }) => {
-  // tilt on mouse move
   const ref = useRef<HTMLDivElement | null>(null);
+  
   function onMove(e: React.MouseEvent) {
     const el = ref.current;
     if (!el) return;
@@ -102,6 +98,7 @@ const FeatureCard: React.FC<{ title: string; desc: string; Icon: React.Component
     const rotX = (py - 0.5) * -8;
     el.style.transform = `perspective(900px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(6px)`;
   }
+  
   function onLeave() {
     const el = ref.current;
     if (el) el.style.transform = "perspective(900px) rotateX(0deg) rotateY(0deg) translateZ(0)";
@@ -120,7 +117,7 @@ const FeatureCard: React.FC<{ title: string; desc: string; Icon: React.Component
     >
       <div className="flex items-center gap-4 mb-3">
         <div className="w-12 h-12 rounded-lg flex items-center justify-center" style={{ background: "linear-gradient(180deg, rgba(59,130,246,0.12), rgba(255,183,0,0.06))" }}>
-          <Icon size={20} color="currentColor" />
+          <Icon size={20} color="var(--accent-blue)" />
         </div>
         <h4 className="text-lg font-semibold">{title}</h4>
       </div>
@@ -133,7 +130,10 @@ const FeatureCard: React.FC<{ title: string; desc: string; Icon: React.Component
    Main Landing Page
    ------------------------- */
 
-export default function LandingPage() {
+// 2. Changed to named export 'LandingPage' to match App.tsx import
+export const LandingPage = () => {
+  const navigate = useNavigate(); // 3. Initialize navigation
+
   // mouse spotlight position
   const mouseX = useMotionValue(-9999);
   const mouseY = useMotionValue(-9999);
@@ -155,7 +155,6 @@ export default function LandingPage() {
     };
   }, [mouseX, mouseY]);
 
-  // spotlight gradient position transforms
   const spotlightX = useTransform(mouseX, (v) => `${v}px`);
   const spotlightY = useTransform(mouseY, (v) => `${v}px`);
 
@@ -175,7 +174,7 @@ export default function LandingPage() {
           if (next > p) {
             setLogs((old) => {
               const t = new Date().toLocaleTimeString();
-              return [ `${t}  • scanned module ${Math.ceil(next/7)} — status OK`, ...old ].slice(0, 30);
+              return [ `${t} • Scanning module ${Math.ceil(next/7)} — OK`, ...old ].slice(0, 30);
             });
           }
           if (next >= 100) {
@@ -183,6 +182,7 @@ export default function LandingPage() {
               window.clearInterval(timer);
               timer = undefined;
             }
+            // Automatically stop scanning after a delay
             setTimeout(() => setScanning(false), 600);
           }
           return next;
@@ -195,7 +195,7 @@ export default function LandingPage() {
   }, [scanning]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,var(--primary-dark), rgba(10,25,47,0.9))", color: "var(--text-light)" }}>
+    <div style={{ minHeight: "100vh", background: "linear-gradient(180deg,var(--primary-dark), rgba(10,25,47,0.9))", color: "var(--text-light)", overflowX: "hidden" }}>
       {/* inline root styles */}
       <style>{rootStyles}</style>
 
@@ -213,8 +213,8 @@ export default function LandingPage() {
               height: 520,
               borderRadius: "50%",
               pointerEvents: "none",
-              background: `radial-gradient(circle at center, rgba(59,130,246,0.22) 0%, rgba(59,130,246,0.14) 12%, rgba(0,0,0,0.0) 40%)`,
-              filter: "blur(28px)",
+              background: "radial-gradient(circle at center, rgba(59,130,246,0.15) 0%, rgba(59,130,246,0.05) 20%, rgba(0,0,0,0.0) 60%)",
+              filter: "blur(40px)",
               mixBlendMode: "screen",
               zIndex: 50
             } as React.CSSProperties
@@ -222,154 +222,187 @@ export default function LandingPage() {
         />
       </div>
 
-      <header style={{ padding: "1.5rem 2rem" }}>
-        <div className="container flex items-center justify-between">
+      <header style={{ padding: "1.5rem 2rem", position: "sticky", top: 0, zIndex: 40, backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="container flex items-center justify-between" style={{ padding: 0 }}>
           <div className="flex items-center gap-3">
-            <div style={{ width: 46, height: 46, borderRadius: 10, background: "linear-gradient(90deg,var(--accent-blue),var(--accent-gold))", display: "grid", placeItems: "center" }}>
-              <ShieldCheck color="#000" />
+            <div style={{ width: 40, height: 40, borderRadius: 8, background: "linear-gradient(135deg,var(--accent-blue),var(--primary-dark))", display: "grid", placeItems: "center", border: "1px solid rgba(255,255,255,0.2)" }}>
+              <ShieldCheck size={24} color="#fff" />
             </div>
             <div>
-              <div style={{ fontWeight: 700, letterSpacing: -0.6 }}>Sentinel</div>
-              <div style={{ fontSize: 12, color: "var(--text-silver)" }}>DevSecOps Platform</div>
+              <div style={{ fontWeight: 700, letterSpacing: -0.5, fontSize: 18 }}>Sentinel</div>
             </div>
           </div>
 
           <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            <button className="glow-btn" onClick={() => alert("Goto docs (stub)")}>Docs</button>
+            {/* 4. Updated Navigation Logic */}
+            <button 
+                className="glow-btn" 
+                style={{ background: "transparent", border: "none" }}
+                onClick={() => navigate('/login')} // "Sign In" goes to login
+            >
+                Sign In
+            </button>
             <button
               className="glow-btn"
-              onClick={() => { setScanning(true); }}
-              aria-pressed={scanning ? "true" : "false"}
+              onClick={() => setScanning(true)} // "Try Demo" stays on page
             >
-              {scanning ? "Scanning…" : "Start Demo Scan"}
+              {scanning ? "Scanning..." : "Try Demo"}
             </button>
           </nav>
         </div>
       </header>
 
-      <main className="container" style={{ paddingTop: 24 }}>
-        <section style={{ display: "grid", gridTemplateColumns: "1fr 420px", gap: 28, alignItems: "start" }}>
+      <main className="container" style={{ paddingTop: 60, paddingBottom: 80 }}>
+        <section style={{ display: "grid", gridTemplateColumns: "1fr minmax(300px, 420px)", gap: 40, alignItems: "center" }}>
+          
           {/* Left: Hero */}
           <div>
-            <Badge>v1.0 — enterprise</Badge>
+            <Badge>v1.0 — Enterprise Ready</Badge>
 
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               style={{
-                marginTop: 18,
-                fontSize: "clamp(2rem, 4.2vw, 3.8rem)",
-                lineHeight: 1.02,
+                marginTop: 24,
+                fontSize: "clamp(2.5rem, 5vw, 4.5rem)",
+                lineHeight: 1.1,
                 fontWeight: 800,
-                background: "linear-gradient(180deg, var(--text-light), var(--text-silver))",
+                background: "linear-gradient(180deg, #ffffff, #a8b2d1)",
                 WebkitBackgroundClip: "text",
                 backgroundClip: "text",
                 color: "transparent",
-                marginBottom: 12
+                marginBottom: 20
               }}
             >
-              Cybersecurity orchestration <br /> <span style={{ color: "var(--accent-gold)" }}>built for engineering teams</span>
+              DevSecOps <br /> 
+              <span style={{ color: "var(--accent-gold)", WebkitTextFillColor: "var(--accent-gold)" }}>Orchestration Engine</span>
             </motion.h1>
 
-            <motion.p initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.2}} style={{color:"var(--text-silver)", maxWidth: 680, marginBottom: 18}}>
-              Unified SAST, DAST, SCA & IaC pipelines. Config-as-code scan flows, intelligent findings clustering, and safe report export for auditing and compliance.
+            <motion.p 
+                initial={{opacity:0}} 
+                animate={{opacity:1}} 
+                transition={{delay:0.2}} 
+                style={{color:"var(--text-silver)", fontSize: "1.125rem", lineHeight: 1.6, maxWidth: 600, marginBottom: 32}}
+            >
+              Automate SAST, DAST, SCA & IaC pipelines with a single tool. 
+              Intelligent findings correlation, AI-driven remediation, and audit-ready reporting.
             </motion.p>
 
-            <div style={{ display: "flex", gap: 12, marginTop: 10 }}>
-              <button className="glow-btn" onClick={() => setScanning(true)} aria-label="Start a demo scan">Try Demo</button>
-              <button className="glow-btn" onClick={() => alert("Contact sales (stub)")}>Contact Sales</button>
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
+              {/* 5. Main CTA goes to Login/Dashboard */}
+              <button 
+                className="glow-btn" 
+                style={{ padding: "1rem 2rem", fontSize: "1.1rem" }}
+                onClick={() => navigate('/login')}
+              >
+                Get Started
+              </button>
+              
+              <button 
+                className="glow-btn" 
+                style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.1)" }}
+                onClick={() => window.open('https://github.com/Hking0o1/sentinel_orchestrator_backend-cli', '_blank')}
+              >
+                View on GitHub
+              </button>
             </div>
 
-            {/* small metrics */}
-            <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-              <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)" }}>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>99.99%</div>
-                <div style={{ fontSize: 12, color: "var(--text-silver)" }}>Uptime SLA</div>
+            {/* Metrics */}
+            <div style={{ display: "flex", gap: 24, marginTop: 48 }}>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "var(--accent-blue)" }}>10+</div>
+                <div style={{ fontSize: 13, color: "var(--text-silver)" }}>Scanners Supported</div>
               </div>
-              <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)" }}>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>8s</div>
-                <div style={{ fontSize: 12, color: "var(--text-silver)" }}>Avg scan time (demo)</div>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "var(--accent-gold)" }}>AI</div>
+                <div style={{ fontSize: 13, color: "var(--text-silver)" }}>Powered Analysis</div>
               </div>
-              <div style={{ padding: 12, borderRadius: 10, background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.03)" }}>
-                <div style={{ fontSize: 20, fontWeight: 700 }}>Semgrep, Trivy</div>
-                <div style={{ fontSize: 12, color: "var(--text-silver)" }}>Integrated tools</div>
+              <div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: "#10b981" }}>0s</div>
+                <div style={{ fontSize: 13, color: "var(--text-silver)" }}>Latency (Async)</div>
               </div>
             </div>
           </div>
 
-          {/* Right: Live demo / scan console */}
+          {/* Right: Live demo console */}
           <aside>
-            <div className="glass p-4 rounded-xl" style={{ minWidth: 360 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-                <div style={{ fontWeight: 700 }}>Live Scan Demo</div>
-                <div style={{ fontSize: 12, color: "var(--text-silver)" }}>{scanning ? "Scanning…" : "Idle"}</div>
+            <div className="glass p-5 rounded-xl border shadow-2xl" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
+                    <Terminal size={16} /> Live Console
+                </div>
+                <div style={{ fontSize: 12, color: scanning ? "var(--accent-gold)" : "var(--text-silver)" }}>
+                    {scanning ? "• Running..." : "• Idle"}
+                </div>
               </div>
 
               {/* progress bar */}
-              <div style={{ height: 12, background: "rgba(255,255,255,0.04)", borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.02)" }}>
+              <div style={{ height: 4, background: "rgba(255,255,255,0.1)", borderRadius: 2, overflow: "hidden", marginBottom: 16 }}>
                 <motion.div
                   initial={false}
                   animate={{ width: `${progress}%` }}
-                  transition={{ ease: "easeOut", duration: 0.5 }}
+                  transition={{ ease: "linear", duration: 0.2 }}
                   style={{
                     height: "100%",
-                    background: "linear-gradient(90deg,var(--accent-blue), var(--accent-gold))"
+                    background: "var(--accent-blue)"
                   }}
                 />
               </div>
 
-              <div style={{ marginTop: 10, fontSize: 13, color: "var(--text-silver)", maxHeight: 220, overflow: "auto", paddingTop: 8 }}>
+              <div style={{ 
+                  height: 300, 
+                  background: "rgba(0,0,0,0.3)", 
+                  borderRadius: 8, 
+                  padding: 12, 
+                  overflowY: "auto", 
+                  fontFamily: "monospace", 
+                  fontSize: 12, 
+                  color: "#d1d5db" 
+              }}>
                 {logs.length === 0 ? (
-                  <div style={{ color: "var(--text-silver)" }}>No activity yet — run a demo scan.</div>
+                  <div style={{ color: "var(--text-silver)", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                    <Activity size={32} style={{ opacity: 0.2, marginBottom: 8 }} />
+                    <span>Ready to scan target...</span>
+                  </div>
                 ) : (
-                  <ul style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
                     {logs.map((l, idx) => (
-                      <li key={idx} style={{ fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, monospace", fontSize: 12 }}>{l}</li>
+                      <li key={idx} style={{ marginBottom: 4, borderLeft: "2px solid var(--accent-blue)", paddingLeft: 8 }}>
+                        <span style={{ opacity: 0.5, marginRight: 8 }}>&gt;</span>{l}
+                      </li>
                     ))}
                   </ul>
                 )}
               </div>
-
-              <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                <button className="glow-btn" onClick={() => setScanning((s) => !s)} aria-pressed={scanning ? "true" : "false"}>
-                  {scanning ? "Stop" : "Run Scan"}
-                </button>
-                <button className="glow-btn" onClick={() => { setProgress(0); setLogs([]); setScanning(false); }}>
-                  Reset
-                </button>
-              </div>
-            </div>
-
-            {/* mini feature list */}
-            <div style={{ marginTop: 16, display: "grid", gap: 10 }}>
-              <FeatureCard Icon={Terminal} title="CLI & API" desc="Automate scan execution from pipelines." />
-              <FeatureCard Icon={Activity} title="Realtime Metrics" desc="Live dashboards & alerting." />
             </div>
           </aside>
         </section>
 
         {/* Features grid */}
-        <section style={{ marginTop: 36 }}>
-          <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Enterprise Features</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 14 }}>
-            <FeatureCard Icon={Lock} title="Secure-by-default" desc="Secrets safe, network hardened." />
-            <FeatureCard Icon={Database} title="Audited Storage" desc="Immutable audit trails & exports." />
-            <FeatureCard Icon={Zap} title="Dynamic Scanning" desc="Interactive web & API scanning." />
-            <FeatureCard Icon={ShieldCheck} title="Policy Engine" desc="Custom rules & severity mapping." />
-            <FeatureCard Icon={Terminal} title="Integrations" desc="CI/CD, Slack, PagerDuty, SIEM." />
-            <FeatureCard Icon={Activity} title="SLA & Support" desc="Enterprise SLAs & dedicated onboarding." />
+        <section style={{ marginTop: 80 }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+              <h3 style={{ fontSize: 28, fontWeight: 800, marginBottom: 10 }}>Unified Security Pipeline</h3>
+              <p style={{ color: "var(--text-silver)" }}>Comprehensive coverage from code commit to production deployment.</p>
+          </div>
+          
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: 20 }}>
+            <FeatureCard Icon={Lock} title="Secure-by-Default" desc="Hardened NGINX reverse proxy with strict WAF rules and rate limiting built-in." />
+            <FeatureCard Icon={Database} title="Persistent Storage" desc="All scan results and audit trails are securely stored in a dedicated PostgreSQL database." />
+            <FeatureCard Icon={Zap} title="DAST Automation" desc="Automated OWASP ZAP, Nikto, and SQLMap scans running in parallel containers." />
+            <FeatureCard Icon={ShieldCheck} title="SAST & SCA" desc="Deep code analysis using Semgrep and dependency tracking with OWASP Dependency-Check." />
+            <FeatureCard Icon={Terminal} title="DevOps Friendly" desc="Full CLI support and REST API for seamless integration into CI/CD workflows." />
+            <FeatureCard Icon={Activity} title="AI Reporting" desc="Google Gemini and Ollama integration for intelligent false-positive reduction and remediation." />
           </div>
         </section>
 
-        {/* footer */}
-        <footer style={{ marginTop: 48, padding: "28px 0", borderTop: "1px solid rgba(255,255,255,0.03)", color: "var(--text-silver)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>© {new Date().getFullYear()} Sentinel — Build secure, ship fast.</div>
-            <div style={{ display: "flex", gap: 16 }}>
-              <a href="#" style={{ color: "var(--text-silver)" }}>Privacy</a>
-              <a href="#" style={{ color: "var(--text-silver)" }}>Docs</a>
-              <a href="#" style={{ color: "var(--text-silver)" }}>GitHub</a>
+        <footer style={{ marginTop: 80, padding: "40px 0", borderTop: "1px solid rgba(255,255,255,0.05)", color: "var(--text-silver)", fontSize: 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
+            <div style={{ opacity: 0.7 }}>© {new Date().getFullYear()} Project Sentinel.</div>
+            <div style={{ display: "flex", gap: 24 }}>
+              <a href="#" style={{ textDecoration: "none", color: "inherit", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#fff"} onMouseOut={e => e.currentTarget.style.color = "inherit"}>Privacy</a>
+              <a href="#" style={{ textDecoration: "none", color: "inherit", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#fff"} onMouseOut={e => e.currentTarget.style.color = "inherit"}>Terms</a>
+              <a href="#" style={{ textDecoration: "none", color: "inherit", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#fff"} onMouseOut={e => e.currentTarget.style.color = "inherit"}>Documentation</a>
             </div>
           </div>
         </footer>

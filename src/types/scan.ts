@@ -90,4 +90,6 @@ export interface ScanReport {
   attackPathAnalysis?: string; 
   geminiReportMarkdown?: string;
   reportPdfUrl?: string; 
+  aiReportText?: string; 
+
 }

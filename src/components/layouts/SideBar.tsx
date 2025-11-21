@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import {
   LayoutDashboard,
   Target,
@@ -10,48 +10,32 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth'; // <-- 1. Import the useAuth hook
-import { useNavigate } from 'react-router-dom'; // <-- 2. Import the useNavigate hook
+import { useAuth } from '@/hooks/useAuth';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 /**
  * Main navigation links for the sidebar.
  */
+// --- FIX: Updated paths to include /app prefix ---
 const navItems = [
-  { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard' },
-  { name: 'Scans', icon: Target, href: '/scans' },
-  { name: 'Reports', icon: BookMarked, href: '/reports' },
-  { name: 'Vulnerabilities', icon: ShieldCheck, href: '/vulnerabilities' },
-  { name: 'Settings', icon: Settings, href: '/settings' },
+  { name: 'Dashboard', icon: LayoutDashboard, href: '/app/dashboard' },
+  { name: 'Scans', icon: Target, href: '/app/scans' },
+  { name: 'Reports', icon: BookMarked, href: '/app/reports' },
+  { name: 'Vulnerabilities', icon: ShieldCheck, href: '/app/vulnerabilities' },
+  { name: 'Settings', icon: Settings, href: '/app/settings' },
 ];
+// ------------------------------------------------
 
-/**
- * Sidebar Component
- * This is the main navigation panel for the dashboard layout.
- */
 export const Sidebar = () => {
-  const [isCollapsed, setIsCollapsed] = React.useState(false);
-  
-  // --- 3. Get the functions we need ---
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const { logout, user } = useAuth();
   const navigate = useNavigate();
-  // ------------------------------------
+  const location = useLocation();
 
-  // --- 4. Create the event handler ---
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
-  // -----------------------------------
-
-  // Helper to get user initials
-  // const getInitials = (name: string | null | undefined) => {
-  //   if (!name) return 'A';
-  //   const names = name.split(' ');
-  //   if (names.length > 1) {
-  //     return names[0][0] + names[names.length - 1][0];
-  //   }
-  //   return name[0];
-  // };
 
   return (
     <nav
@@ -59,7 +43,6 @@ export const Sidebar = () => {
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
-      {/* --- Header / Logo --- */}
       <div className="flex items-center justify-between mb-8">
         {!isCollapsed && (
           <h1 className="text-2xl font-bold text-primary whitespace-nowrap">
@@ -80,33 +63,39 @@ export const Sidebar = () => {
         </Button>
       </div>
 
-      {/* --- Navigation Links --- */}
       <ul className="flex-1 space-y-2">
-        {navItems.map((item) => (
-          <li key={item.name}>
-            <a
-              href={item.href}
-              className={`flex items-center p-3 rounded-lg text-muted-foreground transition-colors duration-200
-                hover:bg-accent hover:text-primary
-                ${isCollapsed ? 'justify-center' : ''}
-              `}
-            >
-              <item.icon className="h-5 w-5" />
-              {!isCollapsed && (
-                <span className="ml-4 font-medium whitespace-nowrap">
-                  {item.name}
-                </span>
-              )}
-            </a>
-          </li>
-        ))}
+        {navItems.map((item) => {
+          // Check if this link is active
+          const isActive = location.pathname === item.href;
+          
+          return (
+            <li key={item.name}>
+              <button
+                onClick={() => navigate(item.href)}
+                className={`w-full flex items-center p-3 rounded-lg transition-colors duration-200
+                  ${isActive 
+                    ? 'bg-accent text-primary' 
+                    : 'text-muted-foreground hover:bg-accent hover:text-primary'
+                  }
+                  ${isCollapsed ? 'justify-center' : ''}
+                `}
+              >
+                <item.icon className="h-5 w-5" />
+                {!isCollapsed && (
+                  <span className="ml-4 font-medium whitespace-nowrap">
+                    {item.name}
+                  </span>
+                )}
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
-      {/* --- User Profile / Logout --- */}
       <div className="border-t border-border pt-4">
-        <a
-          href="/settings" // Link to the settings page
-          className={`flex items-center p-3 rounded-lg text-muted-foreground transition-colors duration-200
+        <button
+          onClick={() => navigate('/app/settings')}
+          className={`w-full flex items-center p-3 rounded-lg text-muted-foreground transition-colors duration-200
             hover:bg-accent hover:text-primary
             ${isCollapsed ? 'justify-center' : ''}
           `}
@@ -117,14 +106,13 @@ export const Sidebar = () => {
             className="h-8 w-8 rounded-full"
           />
           {!isCollapsed && (
-            <div className="ml-4 whitespace-nowrap">
+            <div className="ml-4 whitespace-nowrap text-left">
               <p className="font-semibold text-sm text-foreground">{user?.name || 'Admin'}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           )}
-        </a>
+        </button>
         
-        {/* --- 5. Attach the onClick handler --- */}
         <Button
           variant="ghost"
           className={`w-full mt-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10

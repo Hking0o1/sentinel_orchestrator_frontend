@@ -1,4 +1,4 @@
-import {useRef, useState} from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import * as authService from '@/services/authService';
@@ -29,29 +29,19 @@ import { Input } from '@/components/ui/input';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle, Loader2, ShieldCheck } from 'lucide-react';
 
-// 1. Define the validation schema with Zod
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email address.' }),
-  password: z
-    .string()
-    .min(1, { message: 'Password is required.' }),
+  password: z.string().min(1, { message: 'Password is required.' }),
 });
 
-// 2. Define the type for the form data
 type LoginFormValues = z.infer<typeof formSchema>;
 
-/**
- * LoginPage Component
- * A fully functional login page with form validation,
- * API calls, and error handling.
- */
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const cardRef = useRef(null);
   const [apiError, setApiError] = useState<string | null>(null);
 
-  // 3. Set up react-hook-form
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -62,7 +52,6 @@ export const LoginPage = () => {
 
   const { isSubmitting } = form.formState;
 
-  // 4. Set up GSAP animation
   useGSAP(
     () => {
       gsap.from(cardRef.current, {
@@ -75,22 +64,19 @@ export const LoginPage = () => {
     { scope: cardRef }
   );
 
-  // 5. Handle form submission
   const onSubmit = async (values: LoginFormValues) => {
     setApiError(null);
     try {
-      // --- THIS IS THE REAL API CALL ---
       const { user, access_token } = await authService.login({
         username: values.email,
         password: values.password
       });
-      // ---------------------------------
 
-      // Use the login function from our AuthContext
       login(user, access_token);
       
-      // Redirect to the dashboard
-      navigate('/');
+      // --- FIX: Redirect to the correct dashboard path ---
+      navigate('/app/dashboard');
+      // -------------------------------------------------
 
     } catch (error: any) {
       setApiError(error.message || 'An unknown error occurred.');
@@ -117,7 +103,6 @@ export const LoginPage = () => {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {/* API Error Message */}
               {apiError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -126,7 +111,6 @@ export const LoginPage = () => {
                 </Alert>
               )}
 
-              {/* Email Field */}
               <FormField
                 control={form.control}
                 name="email"
@@ -146,7 +130,6 @@ export const LoginPage = () => {
                 )}
               />
 
-              {/* Password Field */}
               <FormField
                 control={form.control}
                 name="password"

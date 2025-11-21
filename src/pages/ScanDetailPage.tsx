@@ -1,5 +1,11 @@
+import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetScanById } from '@/hooks/useScans';
+import ReactMarkdown from 'react-markdown';
+// @ts-ignore
+import html2pdf from 'html2pdf.js';
+import { format } from 'date-fns';
+
 import {
   Card,
   CardContent,
@@ -19,250 +25,282 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import {
-  AlertCircle,
   Loader2,
   FileText,
+  Download,
+  AlertCircle,
   ShieldAlert,
   ShieldCheck,
   Package,
   Code,
   Globe,
   Network,
+  Activity
 } from 'lucide-react';
 import type { ScanSeverity, ScanFinding } from '@/types/scan';
-import { format } from 'date-fns';
 
-// Helper component for Severity Badges (can be moved to a shared file)
+// Import the Attack Path Visualization
+import AnimatedAttackPath from '@/components/report/AnimatedAttackPath';
+
+// --- Helper Components ---
+
 const SeverityBadge = ({ severity, count }: { severity: ScanSeverity, count?: number }) => {
   const config = {
-    CRITICAL: {
-      icon: ShieldAlert,
-      color: 'bg-red-700 text-red-100',
-      text: 'Critical',
-    },
-    HIGH: {
-      icon: ShieldAlert,
-      color: 'bg-accent-gold text-primary-dark',
-      text: 'High',
-    },
-    MEDIUM: {
-      icon: ShieldCheck,
-      color: 'bg-yellow-600 text-yellow-100',
-      text: 'Medium',
-    },
-    LOW: {
-      icon: ShieldCheck,
-      color: 'bg-accent-blue text-neutral-100',
-      text: 'Low',
-    },
-    INFO: {
-      icon: FileText,
-      color: 'bg-neutral-600 text-neutral-300',
-      text: 'Info',
-    },
+    CRITICAL: { icon: ShieldAlert, color: 'bg-red-900/50 text-red-200 border-red-800', text: 'Critical' },
+    HIGH: { icon: ShieldAlert, color: 'bg-orange-900/50 text-orange-200 border-orange-800', text: 'High' },
+    MEDIUM: { icon: ShieldCheck, color: 'bg-yellow-900/50 text-yellow-200 border-yellow-800', text: 'Medium' },
+    LOW: { icon: ShieldCheck, color: 'bg-blue-900/50 text-blue-200 border-blue-800', text: 'Low' },
+    INFO: { icon: FileText, color: 'bg-gray-800 text-gray-300 border-gray-700', text: 'Info' },
   };
+  // @ts-ignore
   const { icon: Icon, color, text } = config[severity] || config.INFO;
   return (
-    <Badge className={`capitalize ${color} hover:${color} text-xs`}>
-      <Icon className="mr-1 h-3 w-3" />
+    <Badge variant="outline" className={`capitalize ${color} flex items-center gap-1 px-2 py-1`}>
+      <Icon className="h-3 w-3" />
       {text}
-      {count !== undefined && <span className="ml-1.5 font-semibold">{count}</span>}
+      {count !== undefined && <span className="ml-1.5 font-semibold text-xs bg-black/20 px-1.5 py-0.5 rounded-full">{count}</span>}
     </Badge>
   );
 };
 
-// Helper component for Finding Icons
 const FindingIcon = ({ tool }: { tool: string }) => {
-  if (tool.includes('SCA')) return <Package className="h-4 w-4 text-accent-blue" />;
-  if (tool.includes('SAST')) return <Code className="h-4 w-4 text-accent-gold" />;
-  if (tool.includes('DAST') || tool.includes('Nikto')) return <Globe className="h-4 w-4 text-red-500" />;
-  return <Network className="h-4 w-4 text-neutral-400" />;
+  const t = tool.toLowerCase();
+  if (t.includes('sca') || t.includes('dependency')) return <Package className="h-4 w-4 text-blue-400" />;
+  if (t.includes('sast') || t.includes('semgrep')) return <Code className="h-4 w-4 text-yellow-400" />;
+  if (t.includes('dast') || t.includes('zap') || t.includes('nikto')) return <Globe className="h-4 w-4 text-red-400" />;
+  if (t.includes('container') || t.includes('trivy')) return <Package className="h-4 w-4 text-green-400" />;
+  return <Network className="h-4 w-4 text-gray-400" />;
 };
 
-/**
- * ScanDetailPage Component
- * Fetches and displays the detailed report for a single scan job.
- */
+// --- Main Page Component ---
+
 export const ScanDetailPage = () => {
   const { scanId } = useParams<{ scanId: string }>();
+  const { data: scan, isLoading, isError, error } = useGetScanById(scanId || '');
+  
+  // Ref for the markdown content container (for PDF generation)
+  const reportRef = useRef<HTMLDivElement>(null);
 
-  // Fetch data using our custom React Query hook
-  const {
-    data: scan,
-    isLoading,
-    isError,
-    error,
-  } = useGetScanById(scanId || '');
+  const handleDownloadPdf = () => {
+    const element = reportRef.current;
+    if (!element) return;
+    
+    const opt = {
+      margin: 10,
+      filename: `Sentinel_Report_${scan?.id}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    html2pdf().set(opt as any).from(element).save();
+  };
 
-  // 1. Handle Loading State
-  if (isLoading) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center">
-        <Loader2 className="h-16 w-16 animate-spin text-accent-gold" />
-      </div>
-    );
-  }
+  if (isLoading) return (
+    <div className="flex h-[80vh] justify-center items-center flex-col gap-4">
+      <Loader2 className="h-12 w-12 animate-spin text-accent-gold"/>
+      <p className="text-muted-foreground animate-pulse">Loading scan results...</p>
+    </div>
+  );
 
-  // 2. Handle Error State
-  if (isError || !scan) {
-    return (
-      <Alert variant="destructive" className="bg-red-900/50 border-red-700">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Failed to load scan report</AlertTitle>
-        <AlertDescription>
-          {error?.message || 'The scan ID may be invalid or the scan does not exist.'}
-        </AlertDescription>
-      </Alert>
-    );
-  }
+  if (isError || !scan) return (
+    <Alert variant="destructive" className="bg-red-950 border-red-900 text-red-200">
+      <AlertCircle className="h-4 w-4"/>
+      <AlertTitle>Error Loading Report</AlertTitle>
+      <AlertDescription>{error?.message || "Scan not found"}</AlertDescription>
+    </Alert>
+  );
 
-  // 3. Render the full report page
-  const summaryCounts = scan.findings.reduce((acc, finding) => {
-    acc[finding.severity] = (acc[finding.severity] || 0) + 1;
+  // Calculate summary counts
+  const summaryCounts = scan.findings.reduce((acc, f) => {
+    acc[f.severity] = (acc[f.severity] || 0) + 1;
     return acc;
   }, {} as Record<ScanSeverity, number>);
 
   return (
-    <div className="flex flex-col gap-8">
-      {/* --- 1. Page Header --- */}
-      <div>
-        <h1 className="text-3xl font-bold text-neutral-100">Scan Report</h1>
-        <p className="text-lg text-neutral-400">
-          Detailed findings for job <span className="font-mono text-accent-gold text-sm">{scan.id}</span>
-        </p>
+    <div className="flex flex-col gap-8 max-w-7xl mx-auto w-full">
+      
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-card p-6 rounded-xl border border-border">
+        <div>
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-foreground tracking-tight">Scan Report</h1>
+              <Badge variant="outline" className="text-xs font-mono text-muted-foreground">
+                {scan.id.split('-')[0]}...
+              </Badge>
+            </div>
+            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <Globe className="h-4 w-4" />
+                <span className="truncate max-w-[300px]">{scan.targetUrl || scan.sourceCodePath || 'Unknown Target'}</span>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-border" />
+              <div className="flex items-center gap-1.5">
+                <Activity className="h-4 w-4" />
+                <span className="capitalize">{scan.status.toLowerCase()}</span>
+              </div>
+              <div className="w-1 h-1 rounded-full bg-border" />
+              <div>{format(new Date(scan.createdAt), 'PPP p')}</div>
+            </div>
+        </div>
+        <Button onClick={handleDownloadPdf} className="bg-accent-gold text-primary-dark hover:bg-accent-gold/90 font-semibold shadow-lg shadow-accent-gold/10">
+            <Download className="mr-2 h-4 w-4"/> Export PDF
+        </Button>
       </div>
 
-      {/* --- 2. Main Content Tabs --- */}
-      <Tabs defaultValue="summary" className="w-full text-neutral-300">
-        <TabsList className="grid w-full grid-cols-3 max-w-lg bg-primary-light border-neutral-700">
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-          <TabsTrigger value="report">Detailed Report</TabsTrigger>
-          <TabsTrigger value="attack-path">Attack Path</TabsTrigger>
+      {/* Main Content Tabs */}
+      <Tabs defaultValue="summary" className="w-full space-y-6">
+        <TabsList className="bg-card border border-border p-1 h-auto w-full justify-start overflow-x-auto">
+            <TabsTrigger value="summary" className="data-[state=active]:bg-primary-light data-[state=active]:text-accent-gold px-6 py-2">Summary</TabsTrigger>
+            <TabsTrigger value="findings" className="data-[state=active]:bg-primary-light data-[state=active]:text-accent-gold px-6 py-2">Detailed Findings</TabsTrigger>
+            <TabsTrigger value="ai-report" className="data-[state=active]:bg-primary-light data-[state=active]:text-accent-gold px-6 py-2">AI Executive Report</TabsTrigger>
+            <TabsTrigger value="attack-path" className="data-[state=active]:bg-primary-light data-[state=active]:text-accent-gold px-6 py-2">Attack Path</TabsTrigger>
         </TabsList>
 
-        {/* --- Summary Tab --- */}
-        <TabsContent value="summary" className="mt-6">
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="bg-primary-light border-neutral-700 text-neutral-100">
-              <CardHeader>
-                <CardTitle className="text-neutral-400 text-sm font-medium">Target</CardTitle>
-                <CardDescription className="text-neutral-100 text-lg font-semibold truncate">
-                  {scan.targetUrl || scan.sourceCodePath}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="bg-primary-light border-neutral-700 text-neutral-100">
-              <CardHeader>
-                <CardTitle className="text-neutral-400 text-sm font-medium">Profile</CardTitle>
-                <CardDescription className="text-neutral-100 text-lg font-semibold capitalize">
-                  {scan.profile}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="bg-primary-light border-neutral-700 text-neutral-100">
-              <CardHeader>
-                <CardTitle className="text-neutral-400 text-sm font-medium">Status</CardTitle>
-                <CardDescription className={`text-lg font-semibold capitalize ${
-                  scan.status === 'COMPLETED' ? 'text-green-400' :
-                  scan.status === 'RUNNING' ? 'text-accent-blue' :
-                  scan.status === 'FAILED' ? 'text-red-500' : 'text-neutral-400'
-                }`}>
-                  {scan.status}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-            <Card className="bg-primary-light border-neutral-700 text-neutral-100">
-              <CardHeader>
-                <CardTitle className="text-neutral-400 text-sm font-medium">Date</CardTitle>
-                <CardDescription className="text-neutral-100 text-lg font-semibold">
-                  {format(new Date(scan.createdAt), 'dd MMM yyyy')}
-                </CardDescription>
-              </CardHeader>
-            </Card>
+        {/* 1. Summary Tab */}
+        <TabsContent value="summary" className="space-y-6 mt-0">
+          {/* Summary Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+             <Card className="bg-card border-border">
+               <CardContent className="p-6 flex flex-col items-center justify-center">
+                 <SeverityBadge severity="CRITICAL" count={summaryCounts.CRITICAL || 0} />
+               </CardContent>
+             </Card>
+             <Card className="bg-card border-border">
+               <CardContent className="p-6 flex flex-col items-center justify-center">
+                 <SeverityBadge severity="HIGH" count={summaryCounts.HIGH || 0} />
+               </CardContent>
+             </Card>
+             <Card className="bg-card border-border">
+               <CardContent className="p-6 flex flex-col items-center justify-center">
+                 <SeverityBadge severity="MEDIUM" count={summaryCounts.MEDIUM || 0} />
+               </CardContent>
+             </Card>
+             <Card className="bg-card border-border">
+               <CardContent className="p-6 flex flex-col items-center justify-center">
+                 <SeverityBadge severity="LOW" count={summaryCounts.LOW || 0} />
+               </CardContent>
+             </Card>
+             <Card className="bg-card border-border">
+               <CardContent className="p-6 flex flex-col items-center justify-center">
+                 <SeverityBadge severity="INFO" count={summaryCounts.INFO || 0} />
+               </CardContent>
+             </Card>
           </div>
-          <Card className="mt-6 bg-primary-light border-neutral-700 text-neutral-100">
-            <CardHeader>
-              <CardTitle>Vulnerability Summary</CardTitle>
-              <CardDescription className="text-neutral-400">
-                Breakdown of all findings by severity level.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex flex-wrap gap-4">
-              <SeverityBadge severity="CRITICAL" count={summaryCounts.CRITICAL || 0} />
-              <SeverityBadge severity="HIGH" count={summaryCounts.HIGH || 0} />
-              <SeverityBadge severity="MEDIUM" count={summaryCounts.MEDIUM || 0} />
-              <SeverityBadge severity="LOW" count={summaryCounts.LOW || 0} />
-              <SeverityBadge severity="INFO" count={summaryCounts.INFO || 0} />
-            </CardContent>
+          
+          <Card className="bg-card border-border">
+             <CardHeader>
+               <CardTitle>Scan Configuration</CardTitle>
+             </CardHeader>
+             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 text-sm">
+               <div className="flex justify-between py-2 border-b border-border">
+                 <span className="text-muted-foreground">Profile</span>
+                 <span className="font-mono text-foreground uppercase">{scan.profile}</span>
+               </div>
+               <div className="flex justify-between py-2 border-b border-border">
+                 <span className="text-muted-foreground">Job ID</span>
+                 <span className="font-mono text-foreground">{scan.id}</span>
+               </div>
+               <div className="flex justify-between py-2 border-b border-border">
+                 <span className="text-muted-foreground">Duration</span>
+                 <span className="font-mono text-foreground">
+                   {scan.completedAt 
+                     ? `${Math.round((new Date(scan.completedAt).getTime() - new Date(scan.createdAt).getTime()) / 1000)}s` 
+                     : 'In Progress'}
+                 </span>
+               </div>
+             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* --- Detailed Report Tab --- */}
-        <TabsContent value="report" className="mt-6">
-          <Card className="bg-primary-light border-neutral-700 text-neutral-100">
-            <CardHeader>
-              <CardTitle>Detailed Findings</CardTitle>
-              <CardDescription className="text-neutral-400">
-                All vulnerabilities detected during the scan, grouped by tool.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible className="w-full">
-                {scan.findings.length > 0 ? scan.findings.map((finding: ScanFinding, index: number) => (
-                  <AccordionItem key={index} value={`item-${index}`} className="border-neutral-700">
-                    <AccordionTrigger className="hover:no-underline">
-                      <div className="flex items-center gap-3">
-                        <FindingIcon tool={finding.tool} />
-                        <SeverityBadge severity={finding.severity} />
-                        <span className="font-medium text-neutral-100 text-left">
-                          {finding.title}
-                        </span>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="bg-primary-dark p-4 rounded-md">
-                      <h4 className="font-semibold text-neutral-300">Description</h4>
-                      <p className="text-neutral-400 mb-4">{finding.details}</p>
-                      
-                      <h4 className="font-semibold text-neutral-300">Location</h4>
-                      <p className="text-neutral-400 mb-4 font-mono text-sm">
-                        {finding.location || 'N/A'}
-                      </p>
-
-                      <h4 className="font-semibold text-neutral-300">Tool</h4>
-                      <p className="text-neutral-400 mb-4">{finding.tool}</p>
-
-                      <h4 className="font-semibold text-accent-gold">Remediation</h4>
-                      <p className="text-neutral-300">
-                        {finding.remediation || 'No specific remediation provided. Please investigate.'}
-                      </p>
-                    </AccordionContent>
-                  </AccordionItem>
-                )) : (
-                  <p className="text-center text-neutral-400 py-8">No findings reported for this scan.</p>
-                )}
-              </Accordion>
-            </CardContent>
-          </Card>
+        {/* 2. Findings Tab */}
+        <TabsContent value="findings" className="mt-0">
+            <Card className="bg-card border-border">
+                <CardHeader>
+                    <CardTitle>Detailed Findings ({scan.findings.length})</CardTitle>
+                    <CardDescription>Technical details of all discovered vulnerabilities.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                     <Accordion type="single" collapsible className="w-full space-y-2">
+                        {scan.findings.map((finding: ScanFinding, index: number) => (
+                            <AccordionItem key={index} value={`item-${index}`} className="border border-border rounded-lg px-4 bg-primary-dark/30">
+                                <AccordionTrigger className="hover:no-underline py-4">
+                                    <div className="flex items-center gap-4 text-left w-full">
+                                        <FindingIcon tool={finding.tool} />
+                                        <SeverityBadge severity={finding.severity} />
+                                        <span className="font-medium flex-1 pr-4 truncate">{finding.title}</span>
+                                        <span className="text-xs text-muted-foreground font-mono hidden md:inline-block">{finding.tool}</span>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent className="pt-2 pb-6 border-t border-border/50 mt-2">
+                                    <div className="grid gap-4 md:grid-cols-2">
+                                        <div className="space-y-2">
+                                            <h4 className="text-xs font-bold uppercase text-muted-foreground tracking-wider">Description</h4>
+                                            <p className="text-sm text-foreground leading-relaxed">{finding.details}</p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            {finding.location && (
+                                                <div className="bg-black/30 p-3 rounded border border-border/50 font-mono text-xs break-all">
+                                                    <span className="text-accent-blue">LOCATION:</span> {finding.location}
+                                                </div>
+                                            )}
+                                            {finding.remediation && (
+                                                 <div className="space-y-1">
+                                                    <h4 className="text-xs font-bold uppercase text-accent-gold tracking-wider">Remediation</h4>
+                                                    <p className="text-sm text-foreground/90">{finding.remediation}</p>
+                                                 </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                        {scan.findings.length === 0 && (
+                            <div className="text-center py-12 text-muted-foreground">
+                                <ShieldCheck className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                                <p>No vulnerabilities found.</p>
+                            </div>
+                        )}
+                     </Accordion>
+                </CardContent>
+            </Card>
         </TabsContent>
 
-        {/* --- Attack Path Tab (Placeholder) --- */}
-        <TabsContent value="attack-path" className="mt-6">
-          <Card className="bg-primary-light border-neutral-700 text-neutral-100">
-            <CardHeader>
-              <CardTitle>AI-Generated Attack Path</CardTitle>
-              <CardDescription className="text-neutral-400">
-                A visual representation of how an attacker could chain vulnerabilities.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="h-96 flex items-center justify-center">
-              <p className="text-neutral-500">
-                (GSAP Animation & Report Visualization Component will go here)
-              </p>
-            </CardContent>
-          </Card>
+        {/* 3. AI Report Tab (Markdown) */}
+        <TabsContent value="ai-report" className="mt-0">
+            <Card className="bg-white text-black border-none overflow-hidden shadow-xl">
+                <CardHeader className="bg-gray-50 border-b border-gray-200 pb-4">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle className="text-gray-900">Executive Security Report</CardTitle>
+                            <CardDescription className="text-gray-500">Generated by Gemini 1.5 Flash</CardDescription>
+                        </div>
+                        <FileText className="text-gray-300 h-8 w-8" />
+                    </div>
+                </CardHeader>
+                <CardContent className="p-8 md:p-12 bg-white min-h-[600px]">
+                    {/* This div is what gets printed to PDF */}
+                    <div ref={reportRef} className="prose prose-slate max-w-none prose-headings:font-bold prose-h1:text-2xl prose-h2:text-xl prose-a:text-blue-600">
+                        {scan.aiReportText ? (
+                            <ReactMarkdown>{scan.aiReportText}</ReactMarkdown>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-64 text-gray-400">
+                                <Loader2 className="h-8 w-8 animate-spin mb-4 text-gray-300" />
+                                <p>AI report is being generated or is unavailable.</p>
+                            </div>
+                        )}
+                    </div>
+                </CardContent>
+            </Card>
+        </TabsContent>
+
+        {/* 4. Attack Path Tab */}
+        <TabsContent value="attack-path" className="mt-0">
+           <AnimatedAttackPath />
         </TabsContent>
       </Tabs>
     </div>
@@ -270,4 +308,3 @@ export const ScanDetailPage = () => {
 };
 
 export default ScanDetailPage;
-
