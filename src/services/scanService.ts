@@ -4,6 +4,7 @@ import type {
   ScanJobStarted,
   ScanJob,
   ScanReport,
+  ScanFinding // Ensure this is imported
 } from '@/types/scan';
 
 // ... (previous functions: startScan, getScanHistory, getScanReport, getScanStatus) ...
@@ -52,5 +53,15 @@ export const downloadReportPDF = async (jobId: string): Promise<void> => {
   } catch (error: any) {
     console.error('Download Error:', error);
     throw new Error('Failed to download report. It may not exist yet.');
+  }
+};
+
+export const getAllFindings = async (): Promise<ScanFinding[]> => {
+  try {
+    const response = await apiClient.get<ScanFinding[]>('/scans/findings/all');
+    return response.data;
+  } catch (error: any) {
+    console.error('Get Findings Error:', error);
+    throw new Error('Failed to fetch vulnerabilities.');
   }
 };

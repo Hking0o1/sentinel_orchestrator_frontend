@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { useGetScanById } from '@/hooks/useScans';
 import ReactMarkdown from 'react-markdown';
-// @ts-ignore
+// @ts-expect-error
 import html2pdf from 'html2pdf.js';
 import { format } from 'date-fns';
 
@@ -56,7 +56,7 @@ const SeverityBadge = ({ severity, count }: { severity: ScanSeverity, count?: nu
     LOW: { icon: ShieldCheck, color: 'bg-blue-900/50 text-blue-200 border-blue-800', text: 'Low' },
     INFO: { icon: FileText, color: 'bg-gray-800 text-gray-300 border-gray-700', text: 'Info' },
   };
-  // @ts-ignore
+  // @ts-expect-error
   const { icon: Icon, color, text } = config[severity] || config.INFO;
   return (
     <Badge variant="outline" className={`capitalize ${color} flex items-center gap-1 px-2 py-1`}>

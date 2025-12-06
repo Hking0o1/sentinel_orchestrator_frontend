@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as scanService from '@/services/scanService';
-import type { StartScanPayload } from '@/types/scan';
+import type { StartScanPayload, ScanFinding } from '@/types/scan';
 
 /**
  * ---------------------------------------------------------------------------
@@ -19,7 +19,7 @@ export const SCAN_HISTORY_QUERY_KEY = 'scanHistory';
  * Key for caching a single scan report.
  */
 export const SCAN_REPORT_QUERY_KEY = 'scanReport';
-
+export const ALL_FINDINGS_QUERY_KEY = 'allFindings';
 /**
  * React Query hook to fetch the list of all scan jobs.
  *
@@ -94,5 +94,13 @@ export const useStartScan = () => {
       // We can add global error handling here, e.g., show a toast notification
       console.error('Failed to start scan:', error.message);
     },
+  });
+};
+
+export const useGetAllFindings = () => {
+  return useQuery({
+    queryKey: [ALL_FINDINGS_QUERY_KEY],
+    queryFn: scanService.getAllFindings,
+    staleTime: 1000 * 60 * 2, // Refresh every 2 mins
   });
 };
