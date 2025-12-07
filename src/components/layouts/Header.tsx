@@ -74,10 +74,10 @@ export const Header = () => {
               <Avatar className="h-10 w-10">
                 <AvatarImage
                   src={`https://api.dicebear.com/8.x/initials/svg?seed=${user?.email || 'A'}`}
-                  alt={user?.full_name || 'Admin User'}
+                  alt={user?.name || 'Admin User'}
                 />
                 <AvatarFallback className="bg-accent-blue text-primary-dark font-bold">
-                  {user?.full_name ? user.full_name.charAt(0) : 'A'}
+                  {user?.name ? user.name.charAt(0) : 'A'}
                 </AvatarFallback>
               </Avatar>
             </Button>
@@ -90,7 +90,7 @@ export const Header = () => {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none text-accent-gold">
-                  {user?.full_name || 'Admin User'}
+                  {user?.name || 'Admin User'}
                 </p>
                 <p className="text-xs leading-none text-neutral-400">
                   {user?.email || 'admin@sentinel.com'}

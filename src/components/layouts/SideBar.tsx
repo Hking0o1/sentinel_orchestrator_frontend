@@ -8,18 +8,20 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
+  CalendarClock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
+import '/public/sentinel_project_colapsed_logo.png' 
+import logo from '/public/sentinel_project_logo.svg'
+import logo_colapsed from '/public/sentinel_project_colapsed_logo.svg'
 
-/**
- * Main navigation links for the sidebar.
- */
-// --- FIX: Updated paths to include /app prefix ---
+
 const navItems = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/app/dashboard' },
   { name: 'Scans', icon: Target, href: '/app/scans' },
+  { name: 'Schedules', icon: CalendarClock, href: '/app/schedules' },
   { name: 'Reports', icon: BookMarked, href: '/app/reports' },
   { name: 'Vulnerabilities', icon: ShieldCheck, href: '/app/vulnerabilities' },
   { name: 'Settings', icon: Settings, href: '/app/settings' },
@@ -45,9 +47,7 @@ export const Sidebar = () => {
     >
       <div className="flex items-center justify-between mb-8">
         {!isCollapsed && (
-          <h1 className="text-2xl font-bold text-primary whitespace-nowrap">
-            Project Sentinel
-          </h1>
+          <img src={logo} alt='Sentinel' id="logo" className="h-16 w-auto object-contain invert-[0.1] brightness-150"></img>
         )}
         <Button
           variant="outline"
@@ -56,7 +56,10 @@ export const Sidebar = () => {
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {isCollapsed ? (
-            <ChevronRight className="h-5 w-5" />
+            <div>
+              <ChevronRight className="h-5 w-5" />
+              <img src={logo_colapsed} alt='Sentinel' id="logo" className="h-16 w-auto object-contain invert-[0.1] brightness-150"></img>
+            </div>
           ) : (
             <ChevronLeft className="h-5 w-5" />
           )}

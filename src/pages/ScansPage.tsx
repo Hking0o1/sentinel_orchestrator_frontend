@@ -1,4 +1,3 @@
-import React from 'react';
 import { useGetScanHistory, useStartScan } from '@/hooks/useScans';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -19,6 +18,7 @@ import {
   ShieldCheck,
   PlusCircle,
   Play,
+  Cookie // 1. New Import
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import type { ScanJob, ScanSeverity, ScanProfile } from '@/types/scan';
@@ -42,6 +42,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription, // 2. New Import
 } from '@/components/ui/form';
 import {
   Select,
@@ -52,44 +53,26 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 /**
  * ---------------------------------------------------------------------------
- * Reusable Helper Components (already defined in DashboardPage, but good to have here)
+ * Reusable Helper Components
  * ---------------------------------------------------------------------------
  */
 const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
   const config = {
-    CRITICAL: {
-      icon: ShieldAlert,
-      color: 'bg-red-700 text-red-100',
-      text: 'Critical',
-    },
-    HIGH: {
-      icon: ShieldAlert,
-      color: 'bg-accent-gold text-primary-dark',
-      text: 'High',
-    },
-    MEDIUM: {
-      icon: ShieldCheck,
-      color: 'bg-yellow-600 text-yellow-100',
-      text: 'Medium',
-    },
-    LOW: {
-      icon: ShieldCheck,
-      color: 'bg-accent-blue text-neutral-100',
-      text: 'Low',
-    },
-    INFO: {
-      icon: FileText,
-      color: 'bg-neutral-600 text-neutral-300',
-      text: 'Info',
-    },
+    CRITICAL: { icon: ShieldAlert, color: 'bg-red-700 text-red-100', text: 'Critical' },
+    HIGH: { icon: ShieldAlert, color: 'bg-accent-gold text-primary-dark', text: 'High' },
+    MEDIUM: { icon: ShieldCheck, color: 'bg-yellow-600 text-yellow-100', text: 'Medium' },
+    LOW: { icon: ShieldCheck, color: 'bg-accent-blue text-neutral-100', text: 'Low' },
+    INFO: { icon: FileText, color: 'bg-neutral-600 text-neutral-300', text: 'Info' },
   };
+  // @ts-expect-error
   const { icon: Icon, color, text } = config[severity] || config.INFO;
   return (
-    <Badge className={`capitalize ${color} hover:${color}`}>
-      <Icon className="mr-1 h-3 w-3" />
+    <Badge variant="outline" className={`capitalize ${color} flex items-center gap-1 px-2 py-1 w-fit`}>
+      <Icon className="h-3 w-3" />
       {text}
     </Badge>
   );
@@ -98,16 +81,12 @@ const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
 const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
   const config: Record<string, string> = {
     PENDING: 'text-neutral-400',
-    RUNNING: 'text-accent-blue',
+    RUNNING: 'text-accent-blue animate-pulse',
     COMPLETED: 'text-green-400',
     FAILED: 'text-red-500',
   };
-  const statusClass = config[status] || 'text-neutral-500'; // Fallback
-  return (
-    <span className={`font-medium ${statusClass}`}>
-      {status}
-    </span>
-  );
+  const statusClass = config[status] || 'text-neutral-500';
+  return <span className={`font-medium ${statusClass}`}>{status}</span>;
 };
 
 /**
@@ -116,43 +95,31 @@ const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
  * ---------------------------------------------------------------------------
  */
 
-// 1. Define the validation schema for the new scan form
+// 3. Updated Schema with authCookie
 const scanFormSchema = z.object({
-  // FIX 2: Updated Zod enum syntax for custom error messages
-  profile: z.enum(['developer', 'web', 'full']).describe('A scan profile is required.'),
+  profile: z.enum(['developer', 'web', 'full'], {
+    errorMap: () => ({ message: 'A scan profile is required.' }),
+  }),
   targetUrl: z.string().optional(),
   sourceCodePath: z.string().optional(),
-}).refine(
-  (data) => {
+  authCookie: z.string().optional(), // <-- Added field
+}).refine((data) => {
     if (data.profile === 'web' || data.profile === 'full') {
       return !!data.targetUrl && z.string().url().safeParse(data.targetUrl).success;
     }
     return true;
-  },
-  {
-    message: 'A valid Target URL is required for "web" and "full" profiles.',
-    path: ['targetUrl'],
-  }
-).refine(
-  (data) => {
+}, { message: "Valid Target URL required", path: ['targetUrl'] })
+.refine((data) => {
     if (data.profile === 'developer' || data.profile === 'full') {
       return !!data.sourceCodePath && data.sourceCodePath.length > 0;
     }
     return true;
-  },
-  {
-    message: 'A Source Code Path is required for "developer" and "full" profiles.',
-    path: ['sourceCodePath'],
-  }
-);
+}, { message: "Source path required", path: ['sourceCodePath'] });
 
 type ScanFormValues = z.infer<typeof scanFormSchema>;
 
-// The "Start New Scan" modal component
 const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
-  const [apiError, setApiError] = React.useState<string | null>(null);
-  
-  // 2. Get the mutation hook from React Query
+  const [apiError, setApiError] = useState<string | null>(null);
   const startScanMutation = useStartScan();
   
   const form = useForm<ScanFormValues>({
@@ -161,29 +128,29 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
       profile: 'web',
       targetUrl: '',
       sourceCodePath: '',
+      authCookie: '', // <-- Default empty
     },
   });
 
   const selectedProfile = form.watch('profile');
 
-  // 3. Handle form submission
-  const onSubmit = async (values: ScanFormValues) => {
+  const onSubmit = (values: ScanFormValues) => {
     setApiError(null);
+    
+    // 4. Pass cookie to API payload
     const payload = {
       profile: values.profile as ScanProfile,
       target_url: values.targetUrl || '',
       source_code_path: values.sourceCodePath || '',
+      auth_cookie: values.authCookie || undefined, 
     };
     
-    // Trigger the mutation
     startScanMutation.mutate(payload, {
-      // FIX 3: Use 'variables' (the payload) instead of 'data' (the response)
-      // to access profile and target_url for the toast description.
       onSuccess: (data, variables) => {
         toast.success(`Scan job ${data.job_id} started successfully!`, {
           description: `Profile: ${variables.profile}, Target: ${variables.target_url || 'N/A'}`,
         });
-        setOpen(false); // Close the dialog
+        setOpen(false);
         form.reset();
       },
       onError: (error: unknown) => {
@@ -235,23 +202,51 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
           />
 
           {(selectedProfile === 'web' || selectedProfile === 'full') && (
-            <FormField
-              control={form.control}
-              name="targetUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-neutral-300">Target URL</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="https://staging.my-app.com"
-                      {...field}
-                      className="bg-primary-dark border-neutral-600"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <>
+              <FormField
+                control={form.control}
+                name="targetUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="text-neutral-300">Target URL</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="https://staging.my-app.com"
+                        {...field}
+                        className="bg-primary-dark border-neutral-600"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* 5. New Auth Cookie Input Field */}
+              <FormField
+                control={form.control}
+                name="authCookie"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2 text-neutral-300">
+                        <Cookie className="h-4 w-4 text-accent-gold" /> 
+                        Session Cookie (Optional)
+                    </FormLabel>
+                    <FormControl>
+                        <Input 
+                            placeholder="sessionid=xyz...; token=abc..." 
+                            {...field} 
+                            className="bg-primary-dark border-neutral-600"
+                            autoComplete="off"
+                        />
+                    </FormControl>
+                    <FormDescription className="text-xs text-neutral-400">
+                        Paste a valid session cookie to enable authenticated scanning.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </>
           )}
 
           {(selectedProfile === 'developer' || selectedProfile === 'full') && (
@@ -263,7 +258,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
                   <FormLabel className="text-neutral-300">Source Code Path</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="/app/src"
+                      placeholder="/app/projects_to_scan/..."
                       {...field}
                       className="bg-primary-dark border-neutral-600"
                     />
@@ -310,9 +305,8 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
  */
 export const ScansPage = () => {
   const navigate = useNavigate();
-  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // 4. Fetch data using our custom React Query hook
   const {
     data: scanHistory,
     isLoading,
@@ -320,7 +314,6 @@ export const ScansPage = () => {
     error,
   } = useGetScanHistory();
 
-  // 5. Handle Loading and Error states
   const renderContent = () => {
     if (isLoading) {
       return (
@@ -354,7 +347,6 @@ export const ScansPage = () => {
       );
     }
 
-    // 6. Render the full data table
     return (
       <Table>
         <TableHeader>
@@ -406,7 +398,6 @@ export const ScansPage = () => {
 
   return (
     <div className="flex flex-col gap-8">
-      {/* --- 1. Page Header --- */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-neutral-100">Scan Management</h1>
@@ -421,14 +412,10 @@ export const ScansPage = () => {
               Start New Scan
             </Button>
           </DialogTrigger>
-          {/* We pass setOpen so the modal can close itself on success.
-            We also mount it only when open to ensure the form resets.
-          */}
           {isModalOpen && <StartScanModal setOpen={setIsModalOpen} />}
         </Dialog>
       </div>
 
-      {/* --- 2. Main Content Table --- */}
       <div className="bg-primary-light border border-neutral-700 rounded-lg shadow-lg">
         {renderContent()}
       </div>
@@ -437,4 +424,3 @@ export const ScansPage = () => {
 };
 
 export default ScansPage;
-

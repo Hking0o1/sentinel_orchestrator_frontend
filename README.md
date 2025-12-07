@@ -67,3 +67,7 @@ Built with **React**, **Vite**, **TypeScript**, and **Tailwind CSS**, this appli
   ```bash
   http://localhost:80
   ```
+
+## 📄 License
+
+Copyright 2025 The Project Sentinel Authors. Licensed under the MIT License.

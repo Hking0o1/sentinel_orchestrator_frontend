@@ -20,6 +20,7 @@ export interface StartScanPayload {
   profile: ScanProfile;
   target_url: string;
   source_code_path: string;
+  auth_cookie?: string; 
 }
 
 /**

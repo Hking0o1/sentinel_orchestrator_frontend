@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom"; // 1. Import navigation hook
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Terminal, ShieldCheck, Zap, Database, Lock, Activity } from "lucide-react";
+import logo from "../../public/sentinel_project_logo.svg";
 
 /**
  * LandingPage.tsx
@@ -221,36 +222,44 @@ export const LandingPage = () => {
           }
         />
       </div>
-
-      <header style={{ padding: "1.5rem 2rem", position: "sticky", top: 0, zIndex: 40, backdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <div className="container flex items-center justify-between" style={{ padding: 0 }}>
-          <div className="flex items-center gap-3">
-            <div style={{ width: 40, height: 40, borderRadius: 8, background: "linear-gradient(135deg,var(--accent-blue),var(--primary-dark))", display: "grid", placeItems: "center", border: "1px solid rgba(255,255,255,0.2)" }}>
-              <ShieldCheck size={24} color="#fff" />
-            </div>
-            <div>
-              <div style={{ fontWeight: 700, letterSpacing: -0.5, fontSize: 18 }}>Sentinel</div>
-            </div>
+      <header
+        style={{
+          padding: "1.5rem 2rem",
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
+          backdropFilter: "blur(10px)",
+          borderBottom: "1px solid rgba(255,255,255,0.05)",
+        }}
+      >
+        <div
+          className="container flex items-center justify-between"
+          style={{ padding: 0 }}
+        >
+          <div className="flex items-center">
+            <img
+              src={logo}
+              alt="Sentinel Logo"
+              className="h-12 w-auto object-contain invert-[0.1] brightness-150"
+            />
           </div>
 
           <nav style={{ display: "flex", gap: 12, alignItems: "center" }}>
-            {/* 4. Updated Navigation Logic */}
-            <button 
-                className="glow-btn" 
-                style={{ background: "transparent", border: "none" }}
-                onClick={() => navigate('/login')} // "Sign In" goes to login
-            >
-                Sign In
-            </button>
             <button
               className="glow-btn"
-              onClick={() => setScanning(true)} // "Try Demo" stays on page
+              style={{ background: "transparent", border: "none" }}
+              onClick={() => navigate("/login")}
             >
+              Sign In
+            </button>
+
+            <button className="glow-btn" onClick={() => setScanning(true)}>
               {scanning ? "Scanning..." : "Try Demo"}
             </button>
           </nav>
         </div>
-      </header>
+      </header>;
+
 
       <main className="container" style={{ paddingTop: 60, paddingBottom: 80 }}>
         <section style={{ display: "grid", gridTemplateColumns: "1fr minmax(300px, 420px)", gap: 40, alignItems: "center" }}>
