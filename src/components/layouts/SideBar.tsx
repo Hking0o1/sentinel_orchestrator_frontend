@@ -45,26 +45,49 @@ export const Sidebar = () => {
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
-      <div className="flex items-center justify-between mb-8">
-        {!isCollapsed && (
-          <img src={logo} alt='Sentinel' id="logo" className="h-16 w-auto object-contain invert-[0.1] brightness-150"></img>
-        )}
-        <Button
-          variant="outline"
-          size="icon"
-          className="bg-card border-border hover:bg-accent"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-        >
+      {/* --- LOGO SECTION --- */}
+      <div className="flex items-center justify-between p-4 mb-4">
+        <div className="flex items-center justify-center w-full">
           {isCollapsed ? (
-            <div>
-              <ChevronRight className="h-5 w-5" />
-              <img src={logo_colapsed} alt='Sentinel' id="logo" className="h-16 w-auto object-contain invert-[0.1] brightness-150"></img>
-            </div>
+            // Collapsed Logo (Icon)
+            <img 
+              src={logo_colapsed}
+              alt="Sentinel" 
+              className="h-10 w-10 object-contain"
+              onError={(e) => {
+                  // Fallback if image missing
+                  e.currentTarget.style.display = 'none'; 
+                  // You could render an icon here instead
+              }}
+            />
           ) : (
-            <ChevronLeft className="h-5 w-5" />
+            // Full Logo
+            <img 
+              src={logo}
+              alt="Project Sentinel" 
+              className="h-10 object-contain transition-all duration-200"
+              onError={(e) => {
+                  // Fallback text if image missing
+                  e.currentTarget.style.display = 'none';
+              }}
+            />
           )}
-        </Button>
-      </div>
+          
+          {/* Fallback Text if no image (Optional) */}
+          {!isCollapsed && <span className="ml-2 text-xl font-bold text-primary hidden logo-text">Sentinel</span>}
+        </div>
+        </div>
+        <div className={`flex justify-end px-4 mb-4 ${isCollapsed ? 'justify-center' : ''}`}>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="text-muted-foreground hover:bg-accent"
+          >
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </Button>
+        </div>
+
 
       <ul className="flex-1 space-y-2">
         {navItems.map((item) => {

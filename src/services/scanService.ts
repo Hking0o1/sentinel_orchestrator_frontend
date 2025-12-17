@@ -6,14 +6,23 @@ import type {
   ScanReport,
   ScanFinding // Ensure this is imported
 } from '@/types/scan';
+import { MOCK_SCANS } from '@/lib/mockData';
+
+const USE_MOCK_MODE = true; 
 
 // ... (previous functions: startScan, getScanHistory, getScanReport, getScanStatus) ...
 export const startScan = async (payload: StartScanPayload): Promise<ScanJobStarted> => {
+   if (USE_MOCK_MODE) {
+        return { job_id: "mock-job-new", status: "PENDING", message: "Mock scan started" };
+    }
   const response = await apiClient.post<ScanJobStarted>('/scans/start', payload);
   return response.data;
 };
 
 export const getScanHistory = async (): Promise<ScanJob[]> => {
+  if (USE_MOCK_MODE) {
+    return new Promise((resolve) => setTimeout(() => resolve(MOCK_SCANS as any), 500));
+  }
   const response = await apiClient.get<ScanJob[]>('/scans');
   return response.data;
 };

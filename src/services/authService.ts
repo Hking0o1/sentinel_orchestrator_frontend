@@ -1,16 +1,10 @@
 import apiClient from './apiClient';
 import type { LoginCredentials, User, AuthResponse } from '@/types/auth'; // We will define these types next
 
-/**
- * ---------------------------------------------------------------------------
- * Authentication Service
- * ---------------------------------------------------------------------------
- * This service handles all API calls related to user authentication,
- * such as logging in, registering, and logging out.
- *
- * It uses the pre-configured `apiClient` which automatically handles
- * JWT token attachment and 401 error responses.
- */
+import { MOCK_USER } from '@/lib/mockData'; 
+
+const USE_MOCK_MODE = true; 
+
 
 /**
  * Logs in a user with the provided credentials.
@@ -19,31 +13,44 @@ import type { LoginCredentials, User, AuthResponse } from '@/types/auth'; // We 
  * @returns A Promise that resolves with an AuthResponse (user data and token).
  */
 export const login = async (credentials: LoginCredentials): Promise<AuthResponse> => {
-  try {
-    // Note: Our backend's /token endpoint expects 'x-www-form-urlencoded' data.
-    // We create URLSearchParams to format the data correctly.
-    const params = new URLSearchParams();
-    params.append('username', credentials.username);
-    params.append('password', credentials.password);
-
-    // We send the request using our apiClient.
-    const response = await apiClient.post<AuthResponse>('/auth/token', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+  
+  if (USE_MOCK_MODE) {
+    console.log("⚠️ Using MOCK Login");
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          access_token: "mock-jwt-token-123",
+          token_type: "bearer",
+          user: MOCK_USER as any // Type cast for simplicity in dev
+        });
+      }, 800); // Fake network delay
     });
+  } else {
+      try {
+        // Note: Our backend's /token endpoint expects 'x-www-form-urlencoded' data.
+        // We create URLSearchParams to format the data correctly.
+        const params = new URLSearchParams();
+        params.append('username', credentials.username);
+        params.append('password', credentials.password);
 
-    // The response.data will contain our AuthResponse object (user and access_token)
-    return response.data;
+        // We send the request using our apiClient.
+        const response = await apiClient.post<AuthResponse>('/auth/token', params, {
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+        });
 
-  } catch (error: any) {
-    // apiClient's response interceptor will handle 401s (like wrong password).
-    // This will catch other errors (like server down) and re-throw them.
-    console.error('Login Error:', error.response?.data?.detail || error.message);
-    throw new Error(error.response?.data?.detail || 'Login failed. Please try again.');
+        // The response.data will contain our AuthResponse object (user and access_token)
+        return response.data;
+
+      } catch (error: any) {
+        // apiClient's response interceptor will handle 401s (like wrong password).
+        // This will catch other errors (like server down) and re-throw them.
+        console.error('Login Error:', error.response?.data?.detail || error.message);
+        throw new Error(error.response?.data?.detail || 'Login failed. Please try again.');
+      }
+    }
   }
-};
-
 /**
  * Fetches the profile for the currently authenticated user.
  * (Example for a future "get my profile" endpoint)
