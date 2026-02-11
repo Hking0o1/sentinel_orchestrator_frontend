@@ -38,7 +38,7 @@ const ProfileSettingsTab = () => {
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      full_name: user?.name || '',
+      full_name: user?.full_name || '',
       email: user?.email || '',
     },
   });

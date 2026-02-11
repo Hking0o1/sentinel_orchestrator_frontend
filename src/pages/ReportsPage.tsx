@@ -24,7 +24,7 @@ export const ReportsPage = () => {
     try {
       await downloadReportPDF(scanId);
       toast.success("Report downloaded successfully");
-    } catch (err) {
+    } catch {
       toast.error("Failed to download report. Please try again.");
     } finally {
       setDownloadingId(null);

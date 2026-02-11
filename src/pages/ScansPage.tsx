@@ -61,14 +61,13 @@ import { useState } from 'react';
  * ---------------------------------------------------------------------------
  */
 const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
-  const config = {
-    CRITICAL: { icon: ShieldAlert, color: 'bg-red-700 text-red-100', text: 'Critical' },
-    HIGH: { icon: ShieldAlert, color: 'bg-accent-gold text-primary-dark', text: 'High' },
-    MEDIUM: { icon: ShieldCheck, color: 'bg-yellow-600 text-yellow-100', text: 'Medium' },
-    LOW: { icon: ShieldCheck, color: 'bg-accent-blue text-neutral-100', text: 'Low' },
-    INFO: { icon: FileText, color: 'bg-neutral-600 text-neutral-300', text: 'Info' },
+  const config: Record<ScanSeverity, { icon: typeof ShieldAlert; color: string; text: string }> = {
+    CRITICAL: { icon: ShieldAlert, color: 'bg-red-100 text-red-700', text: 'Critical' },
+    HIGH: { icon: ShieldAlert, color: 'bg-orange-100 text-orange-700', text: 'High' },
+    MEDIUM: { icon: ShieldCheck, color: 'bg-yellow-100 text-yellow-700', text: 'Medium' },
+    LOW: { icon: ShieldCheck, color: 'bg-blue-100 text-blue-700', text: 'Low' },
+    INFO: { icon: FileText, color: 'bg-muted text-muted-foreground', text: 'Info' },
   };
-  // @ts-expect-error
   const { icon: Icon, color, text } = config[severity] || config.INFO;
   return (
     <Badge variant="outline" className={`capitalize ${color} flex items-center gap-1 px-2 py-1 w-fit`}>
@@ -80,12 +79,12 @@ const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
 
 const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
   const config: Record<string, string> = {
-    PENDING: 'text-neutral-400',
-    RUNNING: 'text-accent-blue animate-pulse',
-    COMPLETED: 'text-green-400',
-    FAILED: 'text-red-500',
+    PENDING: 'text-muted-foreground',
+    RUNNING: 'text-blue-600 animate-pulse',
+    COMPLETED: 'text-green-600',
+    FAILED: 'text-destructive',
   };
-  const statusClass = config[status] || 'text-neutral-500';
+  const statusClass = config[status] || 'text-muted-foreground';
   return <span className={`font-medium ${statusClass}`}>{status}</span>;
 };
 
@@ -97,9 +96,7 @@ const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
 
 // 3. Updated Schema with authCookie
 const scanFormSchema = z.object({
-  profile: z.enum(['developer', 'web', 'full'], {
-    errorMap: () => ({ message: 'A scan profile is required.' }),
-  }),
+  profile: z.enum(['developer', 'web', 'full']),
   targetUrl: z.string().optional(),
   sourceCodePath: z.string().optional(),
   authCookie: z.string().optional(), // <-- Added field
@@ -137,17 +134,17 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
   const onSubmit = (values: ScanFormValues) => {
     setApiError(null);
     
-    // 4. Pass cookie to API payload
     const payload = {
       profile: values.profile as ScanProfile,
-      target_url: values.targetUrl || '',
-      source_code_path: values.sourceCodePath || '',
+      target_url: values.targetUrl || undefined,
+      source_code_path: values.sourceCodePath || undefined,
       auth_cookie: values.authCookie || undefined, 
+      enable_ai: true,
     };
     
     startScanMutation.mutate(payload, {
       onSuccess: (data, variables) => {
-        toast.success(`Scan job ${data.job_id} started successfully!`, {
+        toast.success(`Scan job ${data.scan_id} started successfully!`, {
           description: `Profile: ${variables.profile}, Target: ${variables.target_url || 'N/A'}`,
         });
         setOpen(false);
@@ -161,15 +158,15 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
   };
 
   return (
-    <DialogContent className="bg-primary-light border-neutral-700 text-neutral-100 sm:max-w-md">
+    <DialogContent className="border-border bg-zinc-800/80 text-card-foreground  sm:max-w-md">
       <DialogHeader>
-        <DialogTitle className="text-accent-gold">Start a New Scan</DialogTitle>
-        <DialogDescription className="text-neutral-200">
+        <DialogTitle>Start a New Scan</DialogTitle>
+        <DialogDescription className="text-muted-foreground">
           Configure and launch a new security scan job.
         </DialogDescription>
       </DialogHeader>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 ">
           {apiError && (
             <Alert variant="destructive" className="bg-red-900/50 border-red-700">
               <AlertCircle className="h-4 w-4" />
@@ -183,14 +180,14 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
             name="profile"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-neutral-300">Scan Profile</FormLabel>
+                <FormLabel>Scan Profile</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="bg-primary-dark border-neutral-600">
+                    <SelectTrigger className="border-input bg-background">
                       <SelectValue placeholder="Select a scan profile" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="bg-primary-light border-neutral-700 text-neutral-100">
+                  <SelectContent className="border-border bg-popover text-popover-foreground">
                     <SelectItem value="developer">Developer (SAST + SCA)</SelectItem>
                     <SelectItem value="web">Web (DAST + Resilience)</SelectItem>
                     <SelectItem value="full">Full (All Scans)</SelectItem>
@@ -208,12 +205,12 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
                 name="targetUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-neutral-300">Target URL</FormLabel>
+                    <FormLabel>Target URL</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="https://staging.my-app.com"
                         {...field}
-                        className="bg-primary-dark border-neutral-600"
+                        className="border-input bg-background"
                       />
                     </FormControl>
                     <FormMessage />
@@ -227,19 +224,19 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
                 name="authCookie"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2 text-neutral-300">
-                        <Cookie className="h-4 w-4 text-accent-gold" /> 
+                    <FormLabel className="flex items-center gap-2">
+                        <Cookie className="h-4 w-4 text-primary" />
                         Session Cookie (Optional)
                     </FormLabel>
                     <FormControl>
                         <Input 
                             placeholder="sessionid=xyz...; token=abc..." 
                             {...field} 
-                            className="bg-primary-dark border-neutral-600"
+                            className="border-input bg-background"
                             autoComplete="off"
                         />
                     </FormControl>
-                    <FormDescription className="text-xs text-neutral-400">
+                    <FormDescription className="text-xs text-muted-foreground">
                         Paste a valid session cookie to enable authenticated scanning.
                     </FormDescription>
                     <FormMessage />
@@ -255,12 +252,12 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
               name="sourceCodePath"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-neutral-300">Source Code Path</FormLabel>
+                  <FormLabel>Source Code Path</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="/app/projects_to_scan/..."
                       {...field}
-                      className="bg-primary-dark border-neutral-600"
+                      className="border-input bg-background"
                     />
                   </FormControl>
                   <FormMessage />
@@ -274,13 +271,13 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="bg-neutral-700 border-neutral-600 hover:bg-neutral-800"
+              className="border-border"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-accent-gold text-primary-dark font-bold hover:bg-accent-gold/90"
+              className="font-semibold"
               disabled={startScanMutation.isPending}
             >
               {startScanMutation.isPending ? (
@@ -318,7 +315,7 @@ export const ScansPage = () => {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-12 w-12 animate-spin text-accent-gold" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       );
     }
@@ -337,9 +334,9 @@ export const ScansPage = () => {
 
     if (!scanHistory || scanHistory.length === 0) {
       return (
-        <div className="text-center text-neutral-400 p-10 bg-primary-light border-2 border-dashed border-neutral-700 rounded-lg">
+        <div className="rounded-lg border-2 border-dashed border-border bg-card p-10 text-center text-muted-foreground">
           <FileText className="mx-auto h-12 w-12" />
-          <h3 className="mt-4 text-lg font-medium text-neutral-100">No scans found</h3>
+          <h3 className="mt-4 text-lg font-medium text-foreground">No scans found</h3>
           <p className="mt-2">
             Get started by running your first scan.
           </p>
@@ -350,21 +347,18 @@ export const ScansPage = () => {
     return (
       <Table>
         <TableHeader>
-          <TableRow className="border-neutral-700 hover:bg-primary-dark">
-            <TableHead className="text-neutral-300">Target</TableHead>
-            <TableHead className="text-neutral-300">Profile</TableHead>
-            <TableHead className="text-neutral-300">Severity</TableHead>
-            <TableHead className="text-neutral-300">Status</TableHead>
-            <TableHead className="text-neutral-300">Date</TableHead>
-            <TableHead className="text-right text-neutral-300">Action</TableHead>
+          <TableRow>
+            <TableHead>Target</TableHead>
+            <TableHead>Profile</TableHead>
+            <TableHead>Severity</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Date</TableHead>
+            <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {scanHistory.map((scan) => (
-            <TableRow
-              key={scan.id}
-              className="border-neutral-700 hover:bg-primary-dark"
-            >
+            <TableRow key={scan.id}>
               <TableCell className="font-medium">
                 {scan.target || 'N/A'}
               </TableCell>
@@ -383,8 +377,8 @@ export const ScansPage = () => {
               <TableCell className="text-right">
                 <Button
                   variant="link"
-                  className="text-accent-gold hover:text-accent-gold/80"
-                  onClick={() => navigate(`/scans/${scan.id}`)}
+                  className="text-primary hover:text-primary/80"
+                  onClick={() => navigate(`/app/scans/${scan.id}`)}
                 >
                   View Report
                 </Button>
@@ -400,14 +394,14 @@ export const ScansPage = () => {
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-neutral-100">Scan Management</h1>
-          <p className="text-lg text-neutral-400">
+          <h1 className="text-3xl font-bold text-foreground">Scan Management</h1>
+          <p className="text-lg text-muted-foreground">
             Review scan history and launch new scans.
           </p>
         </div>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-accent-gold text-primary-dark font-bold hover:bg-accent-gold/90">
+            <Button className="font-semibold">
               <PlusCircle className="mr-2 h-4 w-4" />
               Start New Scan
             </Button>
@@ -416,7 +410,7 @@ export const ScansPage = () => {
         </Dialog>
       </div>
 
-      <div className="bg-primary-light border border-neutral-700 rounded-lg shadow-lg">
+      <div className="rounded-lg border border-border bg-card shadow-sm">
         {renderContent()}
       </div>
     </div>

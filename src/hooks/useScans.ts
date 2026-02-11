@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as scanService from '@/services/scanService';
-import type { StartScanPayload, ScanFinding } from '@/types/scan';
+import type { StartScanPayload } from '@/types/scan';
 
 /**
  * ---------------------------------------------------------------------------

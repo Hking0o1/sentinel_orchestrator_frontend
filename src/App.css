@@ -49,8 +49,8 @@
   --foreground: oklch(0.23 0.03 260);         /* deep gray-blue text */
 
   /* Cards */
-  --card: oklch(0.98 0.01 255);
-  --card-foreground: oklch(0.23 0.03 260);
+  --card: oklch(35.662% 0.09381 255.861);
+  --card-foreground: oklch(28.308% 0.09185 260.248);
 
   /* Popover */
   --popover: oklch(0.98 0.01 255);

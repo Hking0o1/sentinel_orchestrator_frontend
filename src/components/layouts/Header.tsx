@@ -22,6 +22,7 @@ export const Header = () => {
   const currentPageTitle = 'Dashboard'; 
   const { user, logout } = useAuth(); // Get user and logout function
   const navigate = useNavigate();
+  const displayName = user?.full_name || user?.email || 'Admin User';
 
   const handleLogout = () => {
     logout();
@@ -29,10 +30,10 @@ export const Header = () => {
   };
 
   return (
-    <header className="flex h-20 items-center justify-between px-8 bg-primary-dark border-b border-neutral-700">
+    <header className="flex h-20 items-center justify-between border-b bg-card px-4 sm:px-6 lg:px-8">
       {/* --- Page Title & Breadcrumbs --- */}
       <div>
-        <h1 className="text-2xl font-semibold text-neutral-100">
+        <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
           {currentPageTitle}
         </h1>
         {/* Breadcrumbs could go here */}
@@ -40,18 +41,18 @@ export const Header = () => {
 
       <div className="flex items-center gap-6">
         {/* --- Global Search --- */}
-        <div className="relative w-72">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-neutral-400" />
+        <div className="relative hidden w-72 lg:block">
+          <Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search scans, reports, or CVEs..."
-            className="w-full pl-10 bg-primary-light border-neutral-600 focus:border-accent-blue focus:ring-accent-blue"
+            className="w-full border-input bg-background pl-10"
           />
         </div>
 
         {/* --- Action Buttons --- */}
         {/* This button will eventually open the 'Start New Scan' modal */}
-        <Button className="bg-accent-gold text-primary-dark font-bold hover:bg-accent-gold/90">
+        <Button className="hidden sm:inline-flex">
           Start New Scan
         </Button>
 
@@ -59,7 +60,7 @@ export const Header = () => {
         <Button
           variant="outline"
           size="icon"
-          className="bg-primary-dark border-neutral-600 hover:bg-neutral-800 text-neutral-300"
+          className="border-border bg-background text-foreground hover:bg-accent"
         >
           <Bell className="h-5 w-5" />
         </Button>
@@ -74,48 +75,46 @@ export const Header = () => {
               <Avatar className="h-10 w-10">
                 <AvatarImage
                   src={`https://api.dicebear.com/8.x/initials/svg?seed=${user?.email || 'A'}`}
-                  alt={user?.name || 'Admin User'}
+                  alt={displayName}
                 />
-                <AvatarFallback className="bg-accent-blue text-primary-dark font-bold">
-                  {user?.name ? user.name.charAt(0) : 'A'}
+                <AvatarFallback className="bg-primary text-primary-foreground font-bold">
+                  {displayName.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-56 bg-primary-light border-neutral-700 text-neutral-200"
+            className="w-56 border-border bg-popover text-popover-foreground"
             align="end"
             forceMount
           >
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none text-accent-gold">
-                  {user?.name || 'Admin User'}
+                <p className="text-sm font-medium leading-none text-foreground">
+                  {displayName}
                 </p>
-                <p className="text-xs leading-none text-neutral-400">
+                <p className="text-xs leading-none text-muted-foreground">
                   {user?.email || 'admin@sentinel.com'}
                 </p>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-neutral-700" />
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
-              className="focus:bg-neutral-700 focus:text-accent-gold"
-              onSelect={() => navigate('/settings')} // Navigate to profile/settings
+              onSelect={() => navigate('/app/settings')}
             >
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
-              className="focus:bg-neutral-700 focus:text-accent-gold"
-              onSelect={() => navigate('/settings')}
+              onSelect={() => navigate('/app/settings')}
             >
               {/* This component will now render correctly */}
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator className="bg-neutral-700" />
+            <DropdownMenuSeparator />
             <DropdownMenuItem 
-              className="text-red-500 focus:bg-red-900/20 focus:text-red-400"
+              className="text-destructive"
               onSelect={handleLogout} // Call logout function
             >
               <User className="mr-2 h-4 w-4" /> {/* LogOut icon is also available */}

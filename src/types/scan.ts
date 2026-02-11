@@ -18,8 +18,9 @@ export type ScanProfile = 'developer' | 'web' | 'full';
  */
 export interface StartScanPayload {
   profile: ScanProfile;
-  target_url: string;
-  source_code_path: string;
+  target_url?: string;
+  source_code_path?: string;
+  enable_ai?: boolean;
   auth_cookie?: string; 
 }
 
@@ -28,9 +29,10 @@ export interface StartScanPayload {
  * This matches the Pydantic model in our FastAPI backend.
  */
 export interface ScanJobStarted {
-  job_id: string; // The Celery task ID
-  status: 'PENDING' | 'RECEIVED';
-  message: string;
+  scan_id: string;
+  target: string;
+  profile: ScanProfile;
+  status: ScanStatus;
 }
 
 /**

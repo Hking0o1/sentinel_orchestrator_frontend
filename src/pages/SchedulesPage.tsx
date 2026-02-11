@@ -99,7 +99,7 @@ export const SchedulesPage = () => {
     }
   };
 
-  if (isLoading) return <div className="flex h-96 items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-accent-gold" /></div>;
+  if (isLoading) return <div className="flex h-96 items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>;
 
   if (isError) return <Alert variant="destructive"><AlertCircle className="h-4 w-4" /><AlertTitle>Error</AlertTitle><AlertDescription>{error?.message}</AlertDescription></Alert>;
 
@@ -112,11 +112,11 @@ export const SchedulesPage = () => {
         </div>
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-accent-gold text-primary-dark font-bold hover:bg-accent-gold/90">
+            <Button className="font-semibold">
               <PlusCircle className="mr-2 h-4 w-4" /> Create Schedule
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-card border-border text-foreground sm:max-w-[500px]">
+          <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-zinc-800/80 text-foreground sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>New Scan Schedule</DialogTitle>
               <DialogDescription>Configure a recurring scan job.</DialogDescription>
@@ -156,7 +156,7 @@ export const SchedulesPage = () => {
                       <FormLabel>Profile</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl><SelectTrigger className="bg-background"><SelectValue /></SelectTrigger></FormControl>
-                        <SelectContent>
+                        <SelectContent className="border-border bg-popover text-popover-foreground">
                           <SelectItem value="web">Web</SelectItem>
                           <SelectItem value="full">Full</SelectItem>
                           <SelectItem value="developer">Developer</SelectItem>
@@ -203,7 +203,7 @@ export const SchedulesPage = () => {
             <CardContent>
               <div className="space-y-3 mt-2">
                 <div className="flex items-center text-sm text-muted-foreground gap-2">
-                  <CalendarClock className="h-4 w-4 text-accent-gold" />
+                  <CalendarClock className="h-4 w-4 text-primary" />
                   <span>{tryParseCron(schedule.crontab)}</span>
                 </div>
                 <div className="text-sm">

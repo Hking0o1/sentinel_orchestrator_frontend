@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom"; // 1. Import navigation hook
 import { motion, useMotionValue, useTransform } from "framer-motion";
 import { Terminal, ShieldCheck, Zap, Database, Lock, Activity } from "lucide-react";
-import logo from "../../public/sentinel_project_logo.svg";
+import logo from "/sentinel_project_logo.svg";
 
 /**
  * LandingPage.tsx
@@ -74,6 +74,24 @@ body { background: var(--primary-dark); color: var(--text-light); font-family: I
 }
 
 .feature-card { transform-style: preserve-3d; will-change: transform; }
+
+.hero-grid {
+  display: grid;
+  grid-template-columns: 1fr minmax(300px, 420px);
+  gap: 40px;
+  align-items: center;
+}
+
+@media (max-width: 1024px) {
+  .hero-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .container { padding: 1rem; }
+  .metrics-row { flex-wrap: wrap; gap: 16px; }
+}
 `;
 
 /* -------------------------
@@ -175,7 +193,7 @@ export const LandingPage = () => {
           if (next > p) {
             setLogs((old) => {
               const t = new Date().toLocaleTimeString();
-              return [ `${t} • Scanning module ${Math.ceil(next/7)} — OK`, ...old ].slice(0, 30);
+              return [`${t} - Scanning module ${Math.ceil(next / 7)} - OK`, ...old].slice(0, 30);
             });
           }
           if (next >= 100) {
@@ -228,6 +246,7 @@ export const LandingPage = () => {
           position: "sticky",
           top: 0,
           zIndex: 40,
+          background: "rgba(10,25,47,0.75)",
           backdropFilter: "blur(10px)",
           borderBottom: "1px solid rgba(255,255,255,0.05)",
         }}
@@ -258,15 +277,15 @@ export const LandingPage = () => {
             </button>
           </nav>
         </div>
-      </header>;
+      </header>
 
 
       <main className="container" style={{ paddingTop: 60, paddingBottom: 80 }}>
-        <section style={{ display: "grid", gridTemplateColumns: "1fr minmax(300px, 420px)", gap: 40, alignItems: "center" }}>
+        <section className="hero-grid">
           
           {/* Left: Hero */}
           <div>
-            <Badge>v1.0 — Enterprise Ready</Badge>
+            <Badge>v1.0 - Enterprise Ready</Badge>
 
             <motion.h1
               initial={{ opacity: 0, y: 18 }}
@@ -318,7 +337,7 @@ export const LandingPage = () => {
             </div>
 
             {/* Metrics */}
-            <div style={{ display: "flex", gap: 24, marginTop: 48 }}>
+            <div className="metrics-row" style={{ display: "flex", gap: 24, marginTop: 48 }}>
               <div>
                 <div style={{ fontSize: 24, fontWeight: 700, color: "var(--accent-blue)" }}>10+</div>
                 <div style={{ fontSize: 13, color: "var(--text-silver)" }}>Scanners Supported</div>
@@ -334,15 +353,36 @@ export const LandingPage = () => {
             </div>
           </div>
 
-          {/* Right: Live demo console */}
+          {/* Right: Senti video + live demo console */}
           <aside>
+            <div className="glass p-4 rounded-xl border shadow-2xl mb-4" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ fontWeight: 700 }}>Senti Live</div>
+                <div style={{ fontSize: 12, color: "var(--text-silver)" }}>Mascot Stream</div>
+              </div>
+              <video
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                style={{
+                  width: "100%",
+                  borderRadius: 10,
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(0,0,0,0.3)"
+                }}
+                src="/videos/idel_senti.mp4"
+              />
+            </div>
+
             <div className="glass p-5 rounded-xl border shadow-2xl" style={{ borderColor: "rgba(255,255,255,0.1)" }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <div style={{ fontWeight: 700, display: "flex", alignItems: "center", gap: 8 }}>
                     <Terminal size={16} /> Live Console
                 </div>
                 <div style={{ fontSize: 12, color: scanning ? "var(--accent-gold)" : "var(--text-silver)" }}>
-                    {scanning ? "• Running..." : "• Idle"}
+                    {scanning ? "Running..." : "Idle"}
                 </div>
               </div>
 
@@ -407,7 +447,7 @@ export const LandingPage = () => {
 
         <footer style={{ marginTop: 80, padding: "40px 0", borderTop: "1px solid rgba(255,255,255,0.05)", color: "var(--text-silver)", fontSize: 14 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 20 }}>
-            <div style={{ opacity: 0.7 }}>© {new Date().getFullYear()} Project Sentinel.</div>
+            <div style={{ opacity: 0.7 }}>Copyright {new Date().getFullYear()} Project Sentinel.</div>
             <div style={{ display: "flex", gap: 24 }}>
               <a href="#" style={{ textDecoration: "none", color: "inherit", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#fff"} onMouseOut={e => e.currentTarget.style.color = "inherit"}>Privacy</a>
               <a href="#" style={{ textDecoration: "none", color: "inherit", transition: "color 0.2s" }} onMouseOver={e => e.currentTarget.style.color = "#fff"} onMouseOut={e => e.currentTarget.style.color = "inherit"}>Terms</a>
@@ -419,3 +459,5 @@ export const LandingPage = () => {
     </div>
   );
 }
+
+

@@ -14,7 +14,7 @@ export const DashboardLayout = ({
   children: React.ReactNode;
 }) => {
   return (
-    <div className="flex h-screen bg-primary-darker text-neutral-100">
+    <div className="flex h-screen bg-background text-foreground">
       {/* --- Sidebar (Fixed) --- */}
       <Sidebar />
 
@@ -24,7 +24,7 @@ export const DashboardLayout = ({
         <Header />
 
         {/* --- Page Content (Scrollable) --- */}
-        <main className="flex-1 overflow-y-auto bg-primary-dark p-8">
+        <main className="flex-1 overflow-y-auto bg-background p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

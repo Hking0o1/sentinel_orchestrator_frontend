@@ -30,14 +30,13 @@ import type { ScanSeverity } from '@/types/scan';
 
 // Reuse our SeverityBadge helper (best practice: move this to a shared component file later)
 const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
-  const config = {
+  const config: Record<ScanSeverity, { icon: typeof ShieldAlert; color: string; text: string }> = {
     CRITICAL: { icon: ShieldAlert, color: 'bg-red-900/50 text-red-200 border-red-800', text: 'Critical' },
     HIGH: { icon: ShieldAlert, color: 'bg-orange-900/50 text-orange-200 border-orange-800', text: 'High' },
     MEDIUM: { icon: ShieldCheck, color: 'bg-yellow-900/50 text-yellow-200 border-yellow-800', text: 'Medium' },
     LOW: { icon: ShieldCheck, color: 'bg-blue-900/50 text-blue-200 border-blue-800', text: 'Low' },
     INFO: { icon: FileText, color: 'bg-gray-800 text-gray-300 border-gray-700', text: 'Info' },
   };
-  // @ts-expect-error
   const { icon: Icon, color, text } = config[severity] || config.INFO;
   return (
     <Badge variant="outline" className={`capitalize ${color} flex items-center gap-1 w-fit`}>

@@ -49,16 +49,16 @@ const StatCard = ({
 }) => {
   const Icon = icon;
   return (
-    <Card className="bg-primary-light border-neutral-200 text-neutral-300">
+    <Card className="border-border bg-card text-card-foreground">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium text-neutral-300">
+        <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <Icon className="h-4 w-4 text-neutral-300" />
+        <Icon className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
-        <p className="text-xs text-neutral-800">{description}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
       </CardContent>
     </Card>
   );
@@ -71,27 +71,27 @@ const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
   const config = {
     CRITICAL: {
       icon: ShieldAlert,
-      color: 'bg-red-700 text-red-700',
+      color: 'bg-red-100 text-red-700',
       text: 'Critical',
     },
     HIGH: {
       icon: ShieldAlert,
-      color: 'bg-accent-gold text-primary-dark',
+      color: 'bg-orange-100 text-orange-700',
       text: 'High',
     },
     MEDIUM: {
       icon: ShieldCheck,
-      color: 'bg-yellow-600 text-yellow-300',
+      color: 'bg-yellow-100 text-yellow-700',
       text: 'Medium',
     },
     LOW: {
       icon: ShieldCheck,
-      color: 'bg-accent-blue text-neutral-300',
+      color: 'bg-blue-100 text-blue-700',
       text: 'Low',
     },
     INFO: {
       icon: FileText,
-      color: 'bg-neutral-600 text-neutral-200',
+      color: 'bg-muted text-muted-foreground',
       text: 'Info',
     },
   };
@@ -110,13 +110,13 @@ const SeverityBadge = ({ severity }: { severity: ScanSeverity }) => {
  */
 const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
   const config: Record<string, string> = {
-    COMPLETED: 'text-green-400',
-    RUNNING: 'text-accent-blue',
-    PENDING: 'text-neutral-400',
-    FAILED: 'text-red-500',
+    COMPLETED: 'text-green-600',
+    RUNNING: 'text-blue-600',
+    PENDING: 'text-muted-foreground',
+    FAILED: 'text-destructive',
   };
   return (
-    <span className={`font-medium ${config[status] || 'text-neutral-800'}`}>
+    <span className={`font-medium ${config[status] || 'text-muted-foreground'}`}>
       {status}
     </span>
   );
@@ -130,6 +130,7 @@ const StatusBadge = ({ status }: { status: ScanJob['status'] }) => {
 export const DashboardPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const displayName = user?.full_name || user?.email || 'User';
 
   // 1. Fetch data using our custom React Query hook
   const {
@@ -175,7 +176,7 @@ export const DashboardPage = () => {
     if (isLoading) {
       return (
         <div className="flex items-center justify-center h-64">
-          <Loader2 className="h-12 w-12 animate-spin text-accent-gold" />
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
       );
     }
@@ -194,17 +195,17 @@ export const DashboardPage = () => {
 
     if (!scanHistory || scanHistory.length === 0) {
       return (
-        <Card className="bg-primary-light border-neutral-700 text-neutral-700">
+        <Card className="border-border bg-card text-card-foreground">
           <CardHeader>
             <CardTitle>No Scans Found</CardTitle>
-            <CardDescription className="text-neutral-700">
+            <CardDescription className="text-muted-foreground">
               You haven't run any scans yet.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button
-              className="bg-accent-gold text-primary-dark font-bold hover:bg-accent-gold/90"
-              onClick={() => navigate('/scans')}
+              className="font-semibold"
+              onClick={() => navigate('/app/scans')}
             >
               Start Your First Scan
             </Button>
@@ -215,30 +216,27 @@ export const DashboardPage = () => {
 
     // 4. Render the data table if successful
     return (
-      <Card className="bg-primary-light border-neutral-400 text-neutral-200">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
           <CardTitle>Recent Scans</CardTitle>
-          <CardDescription className="text-neutral-100">
+          <CardDescription className="text-muted-foreground">
             A list of your 5 most recent security scans.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="border-neutral-400 hover:bg-primary-dark">
-                <TableHead className="text-neutral-200">Target</TableHead>
-                <TableHead className="text-neutral-200">Severity</TableHead>
-                <TableHead className="text-neutral-200">Status</TableHead>
-                <TableHead className="text-neutral-200">Date</TableHead>
-                <TableHead className="text-right text-neutral-600">Action</TableHead>
+              <TableRow>
+                <TableHead>Target</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {scanHistory.slice(0, 5).map((scan) => (
-                <TableRow
-                  key={scan.id}
-                  className="border-neutral-400 hover:bg-primary-dark"
-                >
+                <TableRow key={scan.id}>
                   {/* --- FIX #1: Changed 'scan.targetUrl' to 'scan.target' --- */}
                   <TableCell className="font-medium">{scan.target}</TableCell>
                   <TableCell>
@@ -257,8 +255,8 @@ export const DashboardPage = () => {
                   <TableCell className="text-right">
                     <Button
                       variant="link"
-                      className="text-accent-gold hover:text-accent-gold/80"
-                      onClick={() => navigate(`/scans/${scan.id}`)}
+                      className="text-primary hover:text-primary/80"
+                      onClick={() => navigate(`/app/scans/${scan.id}`)}
                     >
                       View Report
                     </Button>
@@ -276,10 +274,10 @@ export const DashboardPage = () => {
     <div className="flex flex-col gap-8">
       {/* --- 1. Page Header --- */}
       <div>
-        <h1 className="text-3xl font-bold text-neutral-300">
-          Welcome back, {user?.name || 'User'}!
+        <h1 className="text-3xl font-bold text-foreground">
+          Welcome back, {displayName}!
         </h1>
-        <p className="text-lg text-neutral-200">
+        <p className="text-lg text-muted-foreground">
           Here's a high-level overview of your security posture.
         </p>
       </div>
@@ -313,23 +311,23 @@ export const DashboardPage = () => {
       </div>
 
       {/* --- 3. Risk Score Progress --- */}
-      <Card className="bg-primary-light border-neutral-200 text-neutral-300">
+      <Card className="border-border bg-card text-card-foreground">
         <CardHeader>
           <CardTitle>Security Posture</CardTitle>
-          <CardDescription className="text-neutral-300">
+          <CardDescription className="text-muted-foreground">
             This score represents your overall application security. 100 is
             perfect.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <span className="text-4xl font-bold text-accent-gold">
+            <span className="text-4xl font-bold text-primary">
               {/* Example calculation for posture score */}
               {(100 - (stats.avgRisk * 25)).toFixed(0)}
             </span>
             <Progress
               value={100 - (stats.avgRisk * 25)}
-              className="h-4 bg-linear-to-r from-accent-blue to-accent-gold"
+              className="h-4"
             />
           </div>
         </CardContent>

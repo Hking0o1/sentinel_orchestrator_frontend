@@ -20,7 +20,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
-          <div className="bg-primary-dark min-h-screen text-neutral-100">
+          <div className="min-h-screen bg-background text-foreground">
             <Routes>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<LoginPage />} />
@@ -36,7 +36,6 @@ function App() {
                 <Route path="vulnerabilities" element={<VulnerabilitiesPage />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </div>
         </BrowserRouter>

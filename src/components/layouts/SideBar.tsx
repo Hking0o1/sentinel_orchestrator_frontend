@@ -13,9 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
-import '/public/sentinel_project_colapsed_logo.png' 
-import logo from '/public/sentinel_project_logo.svg'
-import logo_colapsed from '/public/sentinel_project_colapsed_logo.svg'
+import logo from '/sentinel_project_logo.svg';
+import logo_colapsed from '/sentinel_project_colapsed_logo.svg';
 
 
 const navItems = [
@@ -31,6 +30,7 @@ const navItems = [
 export const Sidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { logout, user } = useAuth();
+  const displayName = user?.full_name || user?.email || 'Admin';
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -133,7 +133,7 @@ export const Sidebar = () => {
           />
           {!isCollapsed && (
             <div className="ml-4 whitespace-nowrap text-left">
-              <p className="font-semibold text-sm text-foreground">{user?.name || 'Admin'}</p>
+              <p className="font-semibold text-sm text-foreground">{displayName}</p>
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </div>
           )}

@@ -19,10 +19,11 @@ export interface LoginCredentials {
  * This matches the Pydantic model in our FastAPI backend.
  */
 export interface User {
-  username: string; // Typically the email
+  id: string;
+  email: string;
   full_name: string | null;
-  role: 'admin' | 'user'; // Enforce specific roles
-  disabled: boolean;
+  is_active: boolean;
+  is_admin: boolean;
 }
 
 /**
