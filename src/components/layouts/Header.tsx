@@ -11,18 +11,19 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/hooks/useAuth'; // Import useAuth
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useLocation, useNavigate } from 'react-router-dom'; // Import useNavigate
 
 /**
  * Header Component
  * This is the top bar of the main content area, containing search, notifications, and user profile.
  */
 export const Header = () => {
-  // In a real app, this would come from a router hook or context
-  const currentPageTitle = 'Dashboard'; 
   const { user, logout } = useAuth(); // Get user and logout function
+  const location = useLocation();
   const navigate = useNavigate();
   const displayName = user?.full_name || user?.email || 'Admin User';
+  const routeTitle = location.pathname.split('/').filter(Boolean).pop() || 'dashboard';
+  const currentPageTitle = routeTitle.charAt(0).toUpperCase() + routeTitle.slice(1);
 
   const handleLogout = () => {
     logout();
@@ -30,7 +31,7 @@ export const Header = () => {
   };
 
   return (
-    <header className="flex h-20 items-center justify-between border-b bg-card px-4 sm:px-6 lg:px-8">
+    <header className="flex h-20 items-center justify-between border-b border-border/70 bg-card/75 px-4 backdrop-blur sm:px-6 lg:px-8">
       {/* --- Page Title & Breadcrumbs --- */}
       <div>
         <h1 className="text-xl font-semibold text-foreground sm:text-2xl">

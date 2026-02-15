@@ -24,7 +24,7 @@ export const DashboardLayout = ({
         <Header />
 
         {/* --- Page Content (Scrollable) --- */}
-        <main className="flex-1 overflow-y-auto bg-background p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-transparent p-4 sm:p-6 lg:p-8">
           {children}
         </main>
       </div>

@@ -41,7 +41,7 @@ export const Sidebar = () => {
 
   return (
     <nav
-      className={`flex flex-col h-screen p-4 bg-primary-light border-r border-border text-foreground transition-all duration-300 ease-in-out ${
+      className={`flex flex-col h-screen p-4 bg-sidebar/90 border-r border-sidebar-border text-sidebar-foreground backdrop-blur transition-all duration-300 ease-in-out ${
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
@@ -82,7 +82,7 @@ export const Sidebar = () => {
             variant="ghost"
             size="icon"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            className="text-muted-foreground hover:bg-accent"
+            className="text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
           </Button>
@@ -100,8 +100,8 @@ export const Sidebar = () => {
                 onClick={() => navigate(item.href)}
                 className={`w-full flex items-center p-3 rounded-lg transition-colors duration-200
                   ${isActive 
-                    ? 'bg-accent text-primary' 
-                    : 'text-muted-foreground hover:bg-accent hover:text-primary'
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground' 
+                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                   }
                   ${isCollapsed ? 'justify-center' : ''}
                 `}
@@ -122,7 +122,7 @@ export const Sidebar = () => {
         <button
           onClick={() => navigate('/app/settings')}
           className={`w-full flex items-center p-3 rounded-lg text-muted-foreground transition-colors duration-200
-            hover:bg-accent hover:text-primary
+            hover:bg-sidebar-accent hover:text-sidebar-accent-foreground
             ${isCollapsed ? 'justify-center' : ''}
           `}
         >

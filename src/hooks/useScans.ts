@@ -25,12 +25,17 @@ export const ALL_FINDINGS_QUERY_KEY = 'allFindings';
  *
  * @returns A query object containing the scan history data, loading state, etc.
  */
-export const useGetScanHistory = () => {
+export const useGetScanHistory = (options?: {
+  refetchInterval?: number;
+  staleTime?: number;
+  refetchIntervalInBackground?: boolean;
+}) => {
   return useQuery({
     queryKey: [SCAN_HISTORY_QUERY_KEY],
     queryFn: scanService.getScanHistory,
-    // Example: Refetch every 5 minutes
-    staleTime: 1000 * 60 * 5,
+    staleTime: options?.staleTime ?? 1000 * 60 * 5,
+    refetchInterval: options?.refetchInterval,
+    refetchIntervalInBackground: options?.refetchIntervalInBackground ?? false,
   });
 };
 
