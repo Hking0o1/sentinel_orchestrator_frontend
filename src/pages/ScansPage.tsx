@@ -160,7 +160,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
   return (
     <DialogContent className="border-border bg-zinc-800/80 text-card-foreground  sm:max-w-md">
       <DialogHeader>
-        <DialogTitle>Start a New Scan</DialogTitle>
+        <DialogTitle className='text-amber-50'>Start a New Scan</DialogTitle>
         <DialogDescription className="text-muted-foreground">
           Configure and launch a new security scan job.
         </DialogDescription>
@@ -180,7 +180,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
             name="profile"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Scan Profile</FormLabel>
+                <FormLabel className='text-amber-50'>Scan Profile</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
                     <SelectTrigger className="border-input bg-background">
@@ -205,7 +205,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
                 name="targetUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Target URL</FormLabel>
+                    <FormLabel className='text-amber-50'>Target URL</FormLabel>
                     <FormControl>
                       <Input
                         placeholder="https://staging.my-app.com"
@@ -224,7 +224,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
                 name="authCookie"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-2">
+                    <FormLabel className="flex items-center gap-2 text-amber-50">
                         <Cookie className="h-4 w-4 text-primary" />
                         Session Cookie (Optional)
                     </FormLabel>
@@ -252,7 +252,7 @@ const StartScanModal = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
               name="sourceCodePath"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Source Code Path</FormLabel>
+                  <FormLabel className='text-amber-50'>Source Code Path</FormLabel>
                   <FormControl>
                     <Input
                       placeholder="/app/projects_to_scan/..."

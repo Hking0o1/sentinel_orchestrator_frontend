@@ -116,7 +116,7 @@ export const SchedulesPage = () => {
               <PlusCircle className="mr-2 h-4 w-4" /> Create Schedule
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-zinc-800/80 text-foreground sm:max-w-[500px]">
+          <DialogContent className="max-h-[90vh] overflow-y-auto border-border bg-zinc-800/80 text-amber-50 sm:max-w-[500px]">
             <DialogHeader>
               <DialogTitle>New Scan Schedule</DialogTitle>
               <DialogDescription>Configure a recurring scan job.</DialogDescription>
